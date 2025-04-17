@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>格式转码侠 - 专业图像格式转换工具</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <!-- 思源黑体 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap">
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <span class="logo-icon material-icons">transform</span>
+            <h1>格式转码侠</h1>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li class="active" data-tab="converter"><a href="#"><span class="material-icons">autorenew</span>格式转换</a></li>
+                <li data-tab="history"><a href="#"><span class="material-icons">history</span>历史记录</a></li>
+                <li data-tab="help"><a href="#"><span class="material-icons">help_outline</span>使用帮助</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- 转换器部分 -->
+    <main class="app-container active" id="converter-tab">
+        <section class="file-input-section">
+            <div class="input-tabs">
+                <button class="tab-btn active" data-tab="local"><span class="material-icons">folder</span>本地文件</button>
+                <button class="tab-btn" data-tab="url"><span class="material-icons">link</span>URL链接</button>
+            </div>
+            
+            <div class="tab-content active" id="local-tab">
+                <div class="drop-area" id="drop-area">
+                    <input type="file" id="file-input" accept="image/*" hidden>
+                    <div class="drop-message">
+                        <span class="material-icons large-icon">cloud_upload</span>
+                        <p>拖拽文件到此处或<span class="upload-btn">点击上传</span></p>
+                        <p class="file-limit">支持最大200MB的图像文件</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="url-tab">
+                <div class="url-input-container">
+                    <input type="text" id="url-input" placeholder="输入图像URL地址" class="url-input">
+                    <button id="fetch-url" class="primary-btn"><span class="material-icons">download</span>获取</button>
+                </div>
+            </div>
+        </section>
+        
+        <section class="settings-section">
+            <div class="format-selector">
+                <h3>目标格式</h3>
+                <div class="format-options">
+                    <div class="format-group">
+                        <h4>常用格式</h4>
+                        <div class="format-buttons">
+                            <button class="format-btn" data-format="jpg">JPG</button>
+                            <button class="format-btn" data-format="png">PNG</button>
+                            <button class="format-btn" data-format="webp">WEBP</button>
+                            <button class="format-btn" data-format="gif">GIF</button>
+                            <button class="format-btn" data-format="svg">SVG</button>
+                        </div>
+                    </div>
+                    <div class="format-group">
+                        <h4>专业格式</h4>
+                        <div class="format-buttons">
+                            <button class="format-btn" data-format="psd">PSD</button>
+                            <button class="format-btn" data-format="tiff">TIFF</button>
+                            <button class="format-btn" data-format="raw">RAW</button>
+                            <button class="format-btn" data-format="heic">HEIC</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quality-selector">
+                <h3>质量设置 <span id="quality-value">90%</span></h3>
+                <input type="range" id="quality-slider" min="1" max="100" value="90" class="range-slider">
+                <div class="quality-labels">
+                    <span>低</span>
+                    <span>高</span>
+                </div>
+            </div>
+            
+            <div class="size-selector">
+                <h3>尺寸调整</h3>
+                <div class="size-inputs">
+                    <div class="dimension-input">
+                        <label for="width-input">宽度</label>
+                        <input type="number" id="width-input" placeholder="自动">
+                        <span>px</span>
+                    </div>
+                    <div class="lock-ratio">
+                        <button id="ratio-lock" class="lock-btn locked">
+                            <span class="material-icons">lock</span>
+                        </button>
+                    </div>
+                    <div class="dimension-input">
+                        <label for="height-input">高度</label>
+                        <input type="number" id="height-input" placeholder="自动">
+                        <span>px</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="advanced-options">
+                <details>
+                    <summary>高级选项</summary>
+                    <div class="option-group">
+                        <div class="option-item">
+                            <label for="metadata-toggle">保留元数据</label>
+                            <label class="switch">
+                                <input type="checkbox" id="metadata-toggle" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="option-item">
+                            <label for="compression-type">压缩方式</label>
+                            <select id="compression-type">
+                                <option value="auto">自动选择</option>
+                                <option value="lossless">无损压缩</option>
+                                <option value="lossy">有损压缩</option>
+                            </select>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </section>
+        
+        <section class="preview-section">
+            <div class="preview-header">
+                <h3>实时预览</h3>
+                <div class="preview-controls">
+                    <button id="zoom-in" class="icon-btn"><span class="material-icons">zoom_in</span></button>
+                    <button id="zoom-out" class="icon-btn"><span class="material-icons">zoom_out</span></button>
+                    <button id="toggle-split" class="icon-btn"><span class="material-icons">view_agenda</span></button>
+                </div>
+            </div>
+            
+            <div class="preview-container split-view">
+                <div class="preview-pane original">
+                    <div class="preview-label">原始图像</div>
+                    <div class="image-container" id="original-preview">
+                        <div class="no-preview-message">
+                            <span class="material-icons">image</span>
+                            <p>上传图像后显示预览</p>
+                        </div>
+                    </div>
+                    <div class="image-info">
+                        <span class="format-info">格式: <span id="original-format">--</span></span>
+                        <span class="size-info">大小: <span id="original-size">--</span></span>
+                    </div>
+                </div>
+                
+                <div class="preview-pane converted">
+                    <div class="preview-label">转换预览</div>
+                    <div class="image-container" id="converted-preview">
+                        <div class="no-preview-message">
+                            <span class="material-icons">photo_filter</span>
+                            <p>设置转换参数后预览效果</p>
+                        </div>
+                    </div>
+                    <div class="image-info">
+                        <span class="format-info">格式: <span id="converted-format">--</span></span>
+                        <span class="size-info">预估大小: <span id="converted-size">--</span></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="action-section">
+            <div class="progress-container">
+                <div class="progress-bar" id="conversion-progress">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="progress-status">
+                    <span id="status-message">准备就绪</span>
+                    <span id="progress-percentage">0%</span>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="convert-btn" class="primary-btn" disabled>
+                    <span class="material-icons">autorenew</span>开始转换
+                </button>
+                <button id="cancel-btn" class="secondary-btn" disabled>
+                    <span class="material-icons">cancel</span>取消
+                </button>
+                <button id="download-btn" class="success-btn" disabled>
+                    <span class="material-icons">file_download</span>下载
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- 历史记录部分 -->
+    <main class="app-container" id="history-tab" style="display: none;">
+        <section class="history-section">
+            <div class="history-header">
+                <h2>您的转换历史记录</h2>
+                <p class="history-note">历史记录保存在您的浏览器中，无需登录即可查看。当您清除浏览器数据时，记录将被删除。</p>
+            </div>
+            
+            <div class="history-controls">
+                <div class="history-search">
+                    <input type="text" id="history-search-input" placeholder="搜索历史记录...">
+                    <button id="history-search-btn" class="icon-btn">
+                        <span class="material-icons">search</span>
+                    </button>
+                </div>
+                <div class="history-actions">
+                    <button id="clear-all-history" class="secondary-btn">
+                        <span class="material-icons">delete_sweep</span>清除全部
+                    </button>
+                </div>
+            </div>
+            
+            <div class="history-list" id="history-list">
+                <!-- 历史记录将通过JavaScript动态添加 -->
+                <div class="empty-history" id="empty-history">
+                    <div class="empty-icon">
+                        <span class="material-icons">history</span>
+                    </div>
+                    <p>您还没有转换历史记录</p>
+                    <p class="empty-subtext">转换完成的图像将显示在这里</p>
+                </div>
+                
+                <!-- 历史记录项目示例 -->
+                <div class="history-item">
+                    <div class="history-item-preview">
+                        <img src="https://via.placeholder.com/100" alt="转换图像预览">
+                    </div>
+                    <div class="history-item-details">
+                        <div class="history-item-title">图片.jpg → PNG</div>
+                        <div class="history-item-info">
+                            <span>原始大小: 2.4MB</span>
+                            <span>转换大小: 1.8MB</span>
+                            <span>时间: 2023-06-15 14:32</span>
+                        </div>
+                    </div>
+                    <div class="history-item-actions">
+                        <button class="icon-btn history-download">
+                            <span class="material-icons">file_download</span>
+                        </button>
+                        <button class="icon-btn history-delete">
+                            <span class="material-icons">delete</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="history-item">
+                    <div class="history-item-preview">
+                        <img src="https://via.placeholder.com/100" alt="转换图像预览">
+                    </div>
+                    <div class="history-item-details">
+                        <div class="history-item-title">banner.png → WEBP</div>
+                        <div class="history-item-info">
+                            <span>原始大小: 4.7MB</span>
+                            <span>转换大小: 1.2MB</span>
+                            <span>时间: 2023-06-14 09:45</span>
+                        </div>
+                    </div>
+                    <div class="history-item-actions">
+                        <button class="icon-btn history-download">
+                            <span class="material-icons">file_download</span>
+                        </button>
+                        <button class="icon-btn history-delete">
+                            <span class="material-icons">delete</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="history-pagination">
+                <button class="icon-btn" disabled>
+                    <span class="material-icons">navigate_before</span>
+                </button>
+                <span class="pagination-info">第 1-2 项，共 2 项</span>
+                <button class="icon-btn" disabled>
+                    <span class="material-icons">navigate_next</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- 使用帮助部分 -->
+    <main class="app-container" id="help-tab" style="display: none;">
+        <section class="help-section">
+            <div class="help-header">
+                <h2>使用帮助</h2>
+                <p>了解如何使用格式转码侠进行高效的图像格式转换</p>
+            </div>
+            
+            <div class="help-content">
+                <div class="help-card">
+                    <div class="help-card-header">
+                        <span class="material-icons">upload_file</span>
+                        <h3>如何上传图像</h3>
+                    </div>
+                    <div class="help-card-content">
+                        <p>您可以通过以下方式上传图像：</p>
+                        <ol>
+                            <li>将图像文件<strong>拖放</strong>到上传区域</li>
+                            <li>点击上传区域<strong>选择文件</strong></li>
+                            <li>在URL标签页输入图像的<strong>网络地址</strong></li>
+                        </ol>
+                        <p>支持的最大文件大小为 <strong>200MB</strong></p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <div class="help-card-header">
+                        <span class="material-icons">photo_size_select_large</span>
+                        <h3>格式转换与设置</h3>
+                    </div>
+                    <div class="help-card-content">
+                        <p>上传图像后，您可以：</p>
+                        <ol>
+                            <li>选择目标<strong>格式</strong>（JPG、PNG、WEBP等）</li>
+                            <li>调整<strong>质量</strong>滑块（影响文件大小与图像质量）</li>
+                            <li>修改<strong>尺寸</strong>设置（可锁定宽高比）</li>
+                            <li>设置<strong>高级选项</strong>（元数据保留、压缩方式）</li>
+                        </ol>
+                        <p>设置完成后，点击<strong>开始转换</strong>按钮</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <div class="help-card-header">
+                        <span class="material-icons">compare</span>
+                        <h3>预览与对比</h3>
+                    </div>
+                    <div class="help-card-content">
+                        <p>预览区域可帮助您在转换前查看效果：</p>
+                        <ul>
+                            <li>左侧显示<strong>原始图像</strong></li>
+                            <li>右侧显示<strong>转换预览</strong></li>
+                            <li>使用<strong>缩放按钮</strong>放大或缩小预览</li>
+                            <li>点击<strong>视图切换</strong>按钮改变预览布局</li>
+                        </ul>
+                        <p>预览下方会显示格式和大小信息</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <div class="help-card-header">
+                        <span class="material-icons">history</span>
+                        <h3>历史记录功能</h3>
+                    </div>
+                    <div class="help-card-content">
+                        <p>转换完成的文件会自动保存在历史记录中：</p>
+                        <ul>
+                            <li>记录包含<strong>原始格式</strong>、<strong>目标格式</strong>和<strong>转换时间</strong></li>
+                            <li>可随时<strong>下载</strong>之前转换的文件</li>
+                            <li>历史记录存储在<strong>浏览器本地</strong>，无需登录</li>
+                            <li>可以<strong>搜索</strong>或<strong>删除</strong>历史记录</li>
+                        </ul>
+                        <p>注意：清除浏览器数据会删除历史记录</p>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <div class="help-card-header">
+                        <span class="material-icons">tips_and_updates</span>
+                        <h3>格式选择建议</h3>
+                    </div>
+                    <div class="help-card-content">
+                        <table class="format-tips">
+                            <tr>
+                                <th>需求</th>
+                                <th>推荐格式</th>
+                            </tr>
+                            <tr>
+                                <td>照片/图像质量优先</td>
+                                <td>PNG, TIFF</td>
+                            </tr>
+                            <tr>
+                                <td>网页图像/节省空间</td>
+                                <td>WEBP, JPG</td>
+                            </tr>
+                            <tr>
+                                <td>动画图像</td>
+                                <td>GIF, WEBP</td>
+                            </tr>
+                            <tr>
+                                <td>可缩放图形</td>
+                                <td>SVG</td>
+                            </tr>
+                            <tr>
+                                <td>专业设计/编辑</td>
+                                <td>PSD, TIFF</td>
+                            </tr>
+                            <tr>
+                                <td>苹果设备拍摄照片</td>
+                                <td>HEIC, JPG</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="help-card">
+                    <div class="help-card-header">
+                        <span class="material-icons">security</span>
+                        <h3>隐私与安全</h3>
+                    </div>
+                    <div class="help-card-content">
+                        <p>您的隐私对我们非常重要：</p>
+                        <ul>
+                            <li>所有图像处理<strong>完全在本地</strong>进行</li>
+                            <li>您的文件<strong>不会上传</strong>到任何服务器</li>
+                            <li>无需注册账号或提供个人信息</li>
+                            <li>历史记录仅存储在您的浏览器中</li>
+                        </ul>
+                        <p>安全、高效、无忧地使用我们的工具</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-section">
+                <h3>常见问题解答</h3>
+                
+                <details class="faq-item">
+                    <summary>所有图像格式之间都可以互相转换吗？</summary>
+                    <div class="faq-answer">
+                        <p>大多数基本格式（如JPG、PNG、WEBP、GIF）可以互相转换。但某些专业格式（如PSD、RAW）由于其复杂性，转换过程可能会丢失部分专有信息或图层数据。</p>
+                    </div>
+                </details>
+                
+                <details class="faq-item">
+                    <summary>如何获得最佳质量的图像转换？</summary>
+                    <div class="faq-answer">
+                        <p>要获得最佳质量，请将质量滑块设置为90-100%，并选择适合您需求的格式。对于照片，PNG或高质量JPG通常效果最好。如果需要保留透明度，请使用PNG或WEBP格式。</p>
+                    </div>
+                </details>
+                
+                <details class="faq-item">
+                    <summary>为什么某些专业格式（如PSD、RAW）的转换受限？</summary>
+                    <div class="faq-answer">
+                        <p>专业格式通常包含复杂的图层、元数据和特殊编辑信息。由于浏览器技术限制，完全支持这些格式需要专业软件。我们提供的转换会尽量保留图像内容，但可能无法保留全部图层或编辑功能。</p>
+                    </div>
+                </details>
+                
+                <details class="faq-item">
+                    <summary>历史记录会保存多长时间？</summary>
+                    <div class="faq-answer">
+                        <p>历史记录存储在浏览器的本地存储中，理论上会永久保存，除非您：1) 清除浏览器数据/缓存；2) 使用隐私浏览模式；3) 手动删除记录；4) 浏览器存储空间受限。建议重要文件及时下载保存。</p>
+                    </div>
+                </details>
+                
+                <details class="faq-item">
+                    <summary>如何在移动设备上使用本工具？</summary>
+                    <div class="faq-answer">
+                        <p>本工具支持响应式设计，可在各种设备上使用。在移动设备上，界面会自动调整为适合小屏幕的布局。上传文件时，您可以选择设备图库中的图像或使用URL链接导入。请注意，移动浏览器可能对文件大小有额外限制。</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="app-footer">
+        <p>格式转码侠 &copy; 2023 | 安全·高效·专业</p>
+        <div class="footer-links">
+            <a href="#">隐私政策</a>
+            <a href="#">使用条款</a>
+            <a href="#">联系我们</a>
+        </div>
+    </footer>
+
+    <!-- 错误提示组件 -->
+    <div class="error-toast" id="error-toast">
+        <div class="error-content">
+            <span class="material-icons">error</span>
+            <span id="error-message"></span>
+        </div>
+        <button class="close-error"><span class="material-icons">close</span></button>
+    </div>
+
+    <!-- 转换完成弹窗 -->
+    <div class="modal" id="conversion-complete-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>转换完成</h3>
+                <button class="modal-close"><span class="material-icons">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="success-icon">
+                    <span class="material-icons">check_circle</span>
+                </div>
+                <p>您的图像已成功转换为 <span id="result-format">PNG</span> 格式</p>
+                <div class="result-info">
+                    <div class="info-item">
+                        <span class="info-label">原始大小:</span>
+                        <span id="result-original-size">1.2MB</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">转换后大小:</span>
+                        <span id="result-new-size">820KB</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">节省:</span>
+                        <span id="result-saved">32%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="modal-download-btn" class="primary-btn">
+                    <span class="material-icons">file_download</span>下载文件
+                </button>
+                <button id="modal-share-btn" class="secondary-btn">
+                    <span class="material-icons">share</span>分享
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html> 
