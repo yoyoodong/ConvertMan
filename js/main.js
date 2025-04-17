@@ -141,6 +141,7 @@ const elements = {
     compressRatio: document.getElementById('compress-ratio'),
     compressFilesTree: document.getElementById('compress-files-tree'),
     compressProgress: document.getElementById('compress-progress'),
+    compressProgressFill: document.querySelector('#compress-progress .progress-fill'),
     compressStatusMessage: document.getElementById('compress-status-message'),
     compressProgressPercentage: document.getElementById('compress-progress-percentage'),
     compressPassword: document.getElementById('compress-password'),
@@ -252,25 +253,18 @@ function getFileIcon(filename) {
 
 // 应用初始化时加载PDF.js库
 function initApp() {
+    // 绑定事件监听器
     bindEventListeners();
-    updateUI();
     
-    // 应用各标签页的特定颜色主题
-    applyTabColorThemes();
+    // 初始化历史记录
+    loadHistoryFromStorage();
     
-    // 加载PDF.js库
-    loadPdfJsLibrary();
+    // 默认显示图片转换页面
+    switchMainTab('image-converter');
     
-    // 当页面加载完成后，再次检查DOM元素并绑定事件
-    window.addEventListener('load', function() {
-        setTimeout(function() {
-            rebindPdfEvents();
-        }, 100);
-    });
-
-    // 检查并应用响应式布局
-    checkResponsiveLayout();
-    window.addEventListener('resize', checkResponsiveLayout);
+    // 显示应用已准备就绪
+    console.log('应用初始化完成');
+    elements.loadingOverlay.style.display = 'none';
 }
 
 // 检查响应式布局
@@ -1259,233 +1253,48 @@ function updatePdfUI() {
 
 // 绑定事件监听器
 function bindEventListeners() {
-    // 左侧导航标签切换
-    if (elements.sidebarNavItems) {
-        elements.sidebarNavItems.forEach(item => {
-            item.addEventListener('click', function() {
-                switchMainTab(item.dataset.tab);
-            });
+    // 侧边栏导航点击事件
+    document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const targetTab = this.dataset.tab;
+            switchMainTab(targetTab);
+        });
+    });
+    
+    // 绑定响应式布局事件
+    bindResponsiveEvents();
+    
+    // 绑定历史记录事件
+    bindHistoryEvents();
+    
+    // 绑定帮助事件
+    bindHelpEvents();
+    
+    // 绑定格式转换事件
+    bindFormatConversionEvents();
+    
+    // 绑定文件压缩事件
+    bindCompressionEvents();
+}
+
+// 绑定响应式布局事件
+function bindResponsiveEvents() {
+    // 汉堡菜单点击事件
+    if (elements.hamburgerMenu) {
+        elements.hamburgerMenu.addEventListener('click', function() {
+            document.body.classList.toggle('sidebar-collapsed');
         });
     }
     
-    // 图像转换相关 ----------------------------------------
-    
-    // 文件上传区
-    if (elements.fileInput && elements.uploadBtn) {
-        elements.uploadBtn.addEventListener('click', function() {
-            elements.fileInput.click();
-        });
-        
-        elements.fileInput.addEventListener('change', handleFileSelect);
-    }
-    
-    // 拖放区域
-    if (elements.dropArea) {
-        elements.dropArea.addEventListener('dragover', handleDragOver);
-        elements.dropArea.addEventListener('dragleave', handleDragLeave);
-        elements.dropArea.addEventListener('drop', handleFileDrop);
-    }
-    
-    // 快速上传
-    if (elements.quickUploadBtn && elements.quickFileInput) {
-        elements.quickUploadBtn.addEventListener('click', function() {
-            elements.quickFileInput.click();
-        });
-        
-        elements.quickFileInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                appState.quickFile = file;
-                elements.quickFileName.textContent = file.name;
-            }
-        });
-    }
-    
-    // 格式选择按钮
-    if (elements.formatBtns) {
-        elements.formatBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                setFormat(this.dataset.format);
-            });
-        });
-    }
-    
-    // 质量滑块
-    if (elements.qualitySlider) {
-        elements.qualitySlider.addEventListener('input', handleQualityChange);
-    }
-    
-    // 宽度输入
-    if (elements.widthInput) {
-        elements.widthInput.addEventListener('change', handleWidthChange);
-    }
-    
-    // 高度输入
-    if (elements.heightInput) {
-        elements.heightInput.addEventListener('change', handleHeightChange);
-    }
-    
-    // 锁定比例
-    if (elements.ratioLock) {
-        elements.ratioLock.addEventListener('click', toggleRatioLock);
-    }
-    
-    // 预览控制
-    if (elements.zoomIn) {
-        elements.zoomIn.addEventListener('click', zoomIn);
-    }
-    
-    if (elements.zoomOut) {
-        elements.zoomOut.addEventListener('click', zoomOut);
-    }
-    
-    if (elements.toggleSplit) {
-        elements.toggleSplit.addEventListener('click', toggleSplitView);
-    }
-    
-    // 操作按钮
-    if (elements.convertBtn) {
-        elements.convertBtn.addEventListener('click', startConversion);
-    }
-    
-    if (elements.cancelBtn) {
-        elements.cancelBtn.addEventListener('click', cancelConversion);
-    }
-    
-    if (elements.downloadBtn) {
-        elements.downloadBtn.addEventListener('click', downloadConvertedImage);
-    }
-    
-    // 输入标签切换
-    if (elements.inputTabBtns) {
-        elements.inputTabBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                switchTab(this.dataset.tab);
-            });
-        });
-    }
-    
-    // 错误提示关闭
-    if (elements.closeError) {
-        elements.closeError.addEventListener('click', hideError);
-    }
-    
-    // 模态框关闭
-    if (elements.modalClose) {
-        elements.modalClose.addEventListener('click', hideModal);
-    }
-    
-    // 从模态框下载
-    if (elements.modalDownloadBtn) {
-        elements.modalDownloadBtn.addEventListener('click', function() {
-            downloadConvertedImage();
-            hideModal();
-        });
-    }
-    
-    // 文件压缩相关 ----------------------------------------
-    
-    // 文件上传区
-    if (elements.compressFileInput && elements.compressDropArea) {
-        // 上传按钮点击
-        const compressUploadBtn = elements.compressDropArea.querySelector('.upload-btn');
-        if (compressUploadBtn) {
-            compressUploadBtn.addEventListener('click', function() {
-                elements.compressFileInput.click();
-            });
+    // 窗口大小变化事件
+    window.addEventListener('resize', function() {
+        // 如果窗口宽度小于768px，自动折叠侧边栏
+        if (window.innerWidth < 768) {
+            document.body.classList.add('sidebar-collapsed');
+        } else {
+            document.body.classList.remove('sidebar-collapsed');
         }
-        
-        // 文件选择事件
-        elements.compressFileInput.addEventListener('change', handleCompressFileSelect);
-        
-        // 拖放事件
-        elements.compressDropArea.addEventListener('dragover', handleCompressDragOver);
-        elements.compressDropArea.addEventListener('dragleave', handleCompressDragLeave);
-        elements.compressDropArea.addEventListener('drop', handleCompressFileDrop);
-    }
-    
-    // 批量压缩上传区
-    if (elements.batchCompressFileInput && elements.batchCompressDropArea) {
-        // 上传按钮点击
-        const batchUploadBtn = elements.batchCompressDropArea.querySelector('.batch-upload-btn');
-        if (batchUploadBtn) {
-            batchUploadBtn.addEventListener('click', function() {
-                elements.batchCompressFileInput.click();
-            });
-        }
-        
-        // 文件选择事件
-        elements.batchCompressFileInput.addEventListener('change', handleBatchCompressFileSelect);
-        
-        // 拖放事件
-        elements.batchCompressDropArea.addEventListener('dragover', handleBatchCompressDragOver);
-        elements.batchCompressDropArea.addEventListener('dragleave', handleBatchCompressDragLeave);
-        elements.batchCompressDropArea.addEventListener('drop', handleBatchCompressFileDrop);
-    }
-    
-    // 压缩格式选择
-    if (elements.compressFormatBtns) {
-        elements.compressFormatBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                setCompressFormat(this.dataset.format);
-            });
-        });
-    }
-    
-    // 压缩级别滑块
-    if (elements.compressLevelSlider) {
-        elements.compressLevelSlider.addEventListener('input', handleCompressLevelChange);
-    }
-    
-    // 压缩操作按钮
-    if (elements.compressStartBtn) {
-        elements.compressStartBtn.addEventListener('click', startCompression);
-    }
-    
-    if (elements.compressCancelBtn) {
-        elements.compressCancelBtn.addEventListener('click', cancelCompression);
-    }
-    
-    if (elements.compressDownloadBtn) {
-        elements.compressDownloadBtn.addEventListener('click', downloadCompressedFile);
-    }
-    
-    // 批量压缩控制
-    if (elements.addMoreCompressFiles) {
-        elements.addMoreCompressFiles.addEventListener('click', function() {
-            elements.batchCompressFileInput.click();
-        });
-    }
-    
-    if (elements.clearBatchCompress) {
-        elements.clearBatchCompress.addEventListener('click', clearBatchCompressFiles);
-    }
-    
-    if (elements.batchCompressStart) {
-        elements.batchCompressStart.addEventListener('click', function() {
-            // 此处可以实现批量压缩的逻辑
-            alert('批量压缩功能尚在开发中');
-        });
-    }
-    
-    // 压缩标签页切换
-    if (elements.compressTabBtns) {
-        elements.compressTabBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                // 清除所有标签和内容的active状态
-                elements.compressTabBtns.forEach(tab => tab.classList.remove('active'));
-                document.querySelectorAll('#compress-tab .tab-content').forEach(content => content.classList.remove('active'));
-                
-                // 设置当前标签和内容为active
-                this.classList.add('active');
-                const tabId = this.dataset.tab + '-tab';
-                const tabContent = document.getElementById(tabId);
-                if (tabContent) {
-                    tabContent.classList.add('active');
-                }
-            });
-        });
-    }
+    });
 }
 
 // 处理文件选择
@@ -2127,41 +1936,38 @@ function convertToSVG(canvas, imgElement) {
 
 // 主标签页切换
 function switchMainTab(tabId) {
-    if (!tabId || tabId === appState.currentMainTab) return;
+    // 获取所有主内容区域
+    const mainContents = document.querySelectorAll('.main-content');
     
-    appState.currentMainTab = tabId;
+    // 隐藏所有内容区域
+    mainContents.forEach(content => {
+        content.style.display = 'none';
+    });
     
-    // 更新导航项选中状态
+    // 移除所有导航项的激活状态
     if (elements.sidebarNavItems) {
-        elements.sidebarNavItems.forEach(item => {
-            item.classList.toggle('active', item.dataset.tab === tabId);
+        elements.sidebarNavItems.forEach(navItem => {
+            navItem.classList.remove('active');
         });
-    }
-    
-    // 隐藏所有标签页内容
-    if (elements.appContainers) {
-        elements.appContainers.forEach(container => {
-            container.style.display = 'none';
-        });
-    }
-    
-    // 显示选中的标签页
-    const selectedTab = document.getElementById(tabId + '-tab');
-    if (selectedTab) {
-        selectedTab.style.display = 'grid';
         
-        // 如果是历史标签，加载历史记录
-        if (tabId === 'history') {
+        // 激活选中的导航项
+        const activeNavItem = Array.from(elements.sidebarNavItems).find(
+            item => item.dataset.tab === tabId
+        );
+        if (activeNavItem) {
+            activeNavItem.classList.add('active');
+        }
+    }
+    
+    // 显示选中的内容区域
+    const selectedContent = document.getElementById(tabId);
+    if (selectedContent) {
+        selectedContent.style.display = 'block';
+        
+        // 如果是历史记录页面，刷新历史记录
+        if (tabId === 'history-section') {
             loadHistoryFromStorage();
         }
-    } else {
-        console.warn(`标签页 "${tabId}" 不存在`);
-    }
-    
-    // 在移动设备上，点击导航后关闭侧边栏
-    if (window.innerWidth < 768) {
-        document.body.classList.add('sidebar-collapsed');
-        appState.isMobileMenuOpen = false;
     }
 }
 
@@ -2460,6 +2266,36 @@ function renderHistoryList() {
     
     // 更新分页信息
     updatePagination(startIndex, endIndex, filteredItems.length, totalPages);
+    
+    // 绑定历史记录项的事件
+    bindHistoryItemEvents(startIndex);
+}
+
+// 绑定历史记录项的事件
+function bindHistoryItemEvents(startIndex) {
+    // 下载按钮事件
+    const downloadBtns = elements.historyList.querySelectorAll('.history-download');
+    downloadBtns.forEach((btn, idx) => {
+        btn.addEventListener('click', function() {
+            const historyItem = document.querySelector(`.history-item[data-index="${startIndex + idx}"]`);
+            const index = parseInt(historyItem.dataset.index);
+            downloadFromHistory(index);
+        });
+    });
+    
+    // 删除按钮事件
+    const deleteBtns = elements.historyList.querySelectorAll('.history-delete');
+    deleteBtns.forEach((btn, idx) => {
+        btn.addEventListener('click', function() {
+            const historyItem = document.querySelector(`.history-item[data-index="${startIndex + idx}"]`);
+            const index = parseInt(historyItem.dataset.index);
+            
+            // 显示确认对话框
+            if (confirm('确定删除这条记录吗？此操作无法撤销。')) {
+                deleteFromHistory(index);
+            }
+        });
+    });
 }
 
 // 更新分页控件
@@ -2503,6 +2339,838 @@ function updatePagination(startIndex, endIndex, totalItems, totalPages) {
             }
         });
     }
+}
+
+// 绑定历史记录相关事件
+function bindHistoryEvents() {
+    // 历史记录搜索
+    if (elements.historySearchBtn) {
+        elements.historySearchBtn.addEventListener('click', searchHistory);
+    }
+    
+    if (elements.historySearchInput) {
+        elements.historySearchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                searchHistory();
+            }
+        });
+    }
+    
+    // 清空历史记录
+    if (elements.clearAllHistory) {
+        elements.clearAllHistory.addEventListener('click', clearAllHistory);
+    }
+}
+
+// 绑定帮助相关事件
+function bindHelpEvents() {
+    // 常见问题展开/收起
+    const faqItems = document.querySelectorAll('.faq-item');
+    if (faqItems) {
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            if (question) {
+                question.addEventListener('click', function() {
+                    item.classList.toggle('active');
+                });
+            }
+        });
+    }
+    
+    // 反馈表单提交
+    const feedbackForm = document.querySelector('#feedback-form');
+    if (feedbackForm) {
+        feedbackForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitFeedback();
+        });
+    }
+}
+
+// 绑定格式转换相关事件
+function bindFormatConversionEvents() {
+    // 图像转换相关 ----------------------------------------
+    
+    // 文件上传区
+    if (elements.fileInput && elements.uploadBtn) {
+        elements.uploadBtn.addEventListener('click', function() {
+            elements.fileInput.click();
+        });
+        
+        elements.fileInput.addEventListener('change', handleFileSelect);
+    }
+    
+    // 拖放区域
+    if (elements.dropArea) {
+        elements.dropArea.addEventListener('dragover', handleDragOver);
+        elements.dropArea.addEventListener('dragleave', handleDragLeave);
+        elements.dropArea.addEventListener('drop', handleFileDrop);
+    }
+    
+    // 快速上传
+    if (elements.quickUploadBtn && elements.quickFileInput) {
+        elements.quickUploadBtn.addEventListener('click', function() {
+            elements.quickFileInput.click();
+        });
+        
+        elements.quickFileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                appState.quickFile = file;
+                elements.quickFileName.textContent = file.name;
+            }
+        });
+    }
+    
+    // 格式选择按钮
+    if (elements.formatBtns) {
+        elements.formatBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                setFormat(this.dataset.format);
+            });
+        });
+    }
+    
+    // 质量滑块
+    if (elements.qualitySlider) {
+        elements.qualitySlider.addEventListener('input', handleQualityChange);
+    }
+    
+    // 宽度输入
+    if (elements.widthInput) {
+        elements.widthInput.addEventListener('change', handleWidthChange);
+    }
+    
+    // 高度输入
+    if (elements.heightInput) {
+        elements.heightInput.addEventListener('change', handleHeightChange);
+    }
+    
+    // 锁定比例
+    if (elements.ratioLock) {
+        elements.ratioLock.addEventListener('click', toggleRatioLock);
+    }
+    
+    // 预览控制
+    if (elements.zoomIn) {
+        elements.zoomIn.addEventListener('click', zoomIn);
+    }
+    
+    if (elements.zoomOut) {
+        elements.zoomOut.addEventListener('click', zoomOut);
+    }
+    
+    if (elements.toggleSplit) {
+        elements.toggleSplit.addEventListener('click', toggleSplitView);
+    }
+    
+    // 操作按钮
+    if (elements.convertBtn) {
+        elements.convertBtn.addEventListener('click', startConversion);
+    }
+    
+    if (elements.cancelBtn) {
+        elements.cancelBtn.addEventListener('click', cancelConversion);
+    }
+    
+    if (elements.downloadBtn) {
+        elements.downloadBtn.addEventListener('click', downloadConvertedImage);
+    }
+    
+    // 输入标签切换
+    if (elements.inputTabBtns) {
+        elements.inputTabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                switchTab(this.dataset.tab);
+            });
+        });
+    }
+    
+    // 错误提示关闭
+    if (elements.closeError) {
+        elements.closeError.addEventListener('click', hideError);
+    }
+    
+    // 模态框关闭
+    if (elements.modalClose) {
+        elements.modalClose.addEventListener('click', hideModal);
+    }
+    
+    // 从模态框下载
+    if (elements.modalDownloadBtn) {
+        elements.modalDownloadBtn.addEventListener('click', function() {
+            downloadConvertedImage();
+            hideModal();
+        });
+    }
+
+    // PDF转换相关事件
+    bindPdfEvents();
+}
+
+// 绑定PDF相关事件
+function bindPdfEvents() {
+    // PDF上传按钮
+    const pdfUploadBtn = document.querySelector('#pdf-upload-btn');
+    const pdfFileInput = document.querySelector('#pdf-file-input');
+    
+    if (pdfUploadBtn && pdfFileInput) {
+        pdfUploadBtn.addEventListener('click', function() {
+            pdfFileInput.click();
+        });
+        
+        pdfFileInput.addEventListener('change', handlePdfFileSelect);
+    }
+    
+    // PDF拖放区域
+    const pdfDropArea = document.querySelector('#pdf-drop-area');
+    if (pdfDropArea) {
+        pdfDropArea.addEventListener('dragover', handlePdfDragOver);
+        pdfDropArea.addEventListener('dragleave', handlePdfDragLeave);
+        pdfDropArea.addEventListener('drop', handlePdfFileDrop);
+    }
+    
+    // PDF页面预览相关事件
+    const pdfPagePrev = document.querySelector('#pdf-page-prev');
+    const pdfPageNext = document.querySelector('#pdf-page-next');
+    
+    if (pdfPagePrev) {
+        pdfPagePrev.addEventListener('click', showPrevPdfPage);
+    }
+    
+    if (pdfPageNext) {
+        pdfPageNext.addEventListener('click', showNextPdfPage);
+    }
+}
+
+// 绑定文件压缩相关事件
+function bindCompressionEvents() {
+    // 文件上传区
+    if (elements.compressFileInput && elements.compressDropArea) {
+        // 上传按钮点击
+        const compressUploadBtn = elements.compressDropArea.querySelector('.upload-btn');
+        if (compressUploadBtn) {
+            compressUploadBtn.addEventListener('click', function() {
+                elements.compressFileInput.click();
+            });
+        }
+        
+        // 文件选择事件
+        elements.compressFileInput.addEventListener('change', handleCompressFileSelect);
+        
+        // 拖放事件
+        elements.compressDropArea.addEventListener('dragover', handleCompressDragOver);
+        elements.compressDropArea.addEventListener('dragleave', handleCompressDragLeave);
+        elements.compressDropArea.addEventListener('drop', handleCompressFileDrop);
+    }
+    
+    // 批量压缩上传区
+    if (elements.batchCompressFileInput && elements.batchCompressDropArea) {
+        // 上传按钮点击
+        const batchUploadBtn = elements.batchCompressDropArea.querySelector('.batch-upload-btn');
+        if (batchUploadBtn) {
+            batchUploadBtn.addEventListener('click', function() {
+                elements.batchCompressFileInput.click();
+            });
+        }
+        
+        // 文件选择事件
+        elements.batchCompressFileInput.addEventListener('change', handleBatchCompressFileSelect);
+        
+        // 拖放事件
+        elements.batchCompressDropArea.addEventListener('dragover', handleBatchCompressDragOver);
+        elements.batchCompressDropArea.addEventListener('dragleave', handleBatchCompressDragLeave);
+        elements.batchCompressDropArea.addEventListener('drop', handleBatchCompressFileDrop);
+    }
+    
+    // 压缩格式选择
+    if (elements.compressFormatBtns) {
+        elements.compressFormatBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                setCompressFormat(this.dataset.format);
+            });
+        });
+    }
+    
+    // 压缩级别滑块
+    if (elements.compressLevelSlider) {
+        elements.compressLevelSlider.addEventListener('input', handleCompressLevelChange);
+    }
+    
+    // 压缩操作按钮
+    if (elements.compressStartBtn) {
+        elements.compressStartBtn.addEventListener('click', startCompression);
+    }
+    
+    if (elements.compressCancelBtn) {
+        elements.compressCancelBtn.addEventListener('click', cancelCompression);
+    }
+    
+    if (elements.compressDownloadBtn) {
+        elements.compressDownloadBtn.addEventListener('click', downloadCompressedFile);
+    }
+    
+    // 批量压缩控制
+    if (elements.addMoreCompressFiles) {
+        elements.addMoreCompressFiles.addEventListener('click', function() {
+            elements.batchCompressFileInput.click();
+        });
+    }
+    
+    if (elements.clearBatchCompress) {
+        elements.clearBatchCompress.addEventListener('click', clearBatchCompressFiles);
+    }
+    
+    if (elements.batchCompressStart) {
+        elements.batchCompressStart.addEventListener('click', function() {
+            // 此处可以实现批量压缩的逻辑
+            alert('批量压缩功能尚在开发中');
+        });
+    }
+    
+    // 压缩标签页切换
+    if (elements.compressTabBtns) {
+        elements.compressTabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 清除所有标签和内容的active状态
+                elements.compressTabBtns.forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('#compress-tab .tab-content').forEach(content => content.classList.remove('active'));
+                
+                // 设置当前标签和内容为active
+                this.classList.add('active');
+                const tabId = this.dataset.tab + '-tab';
+                const tabContent = document.getElementById(tabId);
+                if (tabContent) {
+                    tabContent.classList.add('active');
+                }
+            });
+        });
+    }
+}
+
+// 压缩文件处理函数
+function handleCompressFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        processCompressFile(file);
+    }
+}
+
+// 压缩文件拖放相关函数
+function handleCompressDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.compressDropArea.classList.add('drag-over');
+}
+
+function handleCompressDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.compressDropArea.classList.remove('drag-over');
+}
+
+function handleCompressFileDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.compressDropArea.classList.remove('drag-over');
+    
+    const file = event.dataTransfer.files[0];
+    if (file) {
+        processCompressFile(file);
+    } else {
+        showError('请上传有效的文件');
+    }
+}
+
+// 批量压缩文件处理
+function handleBatchCompressFileSelect(event) {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+        addBatchCompressFiles(files);
+    }
+}
+
+// 批量压缩拖放相关函数
+function handleBatchCompressDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.batchCompressDropArea.classList.add('drag-over');
+}
+
+function handleBatchCompressDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.batchCompressDropArea.classList.remove('drag-over');
+}
+
+function handleBatchCompressFileDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.batchCompressDropArea.classList.remove('drag-over');
+    
+    const files = event.dataTransfer.files;
+    if (files && files.length > 0) {
+        addBatchCompressFiles(files);
+    } else {
+        showError('请上传有效的文件');
+    }
+}
+
+// 处理压缩文件
+function processCompressFile(file) {
+    // 更新应用状态
+    appState.compressFile = file;
+    appState.compressedBlob = null;
+    
+    // 更新UI显示文件信息
+    updateCompressFileInfo(file);
+    
+    // 激活压缩按钮
+    if (elements.compressStartBtn) {
+        elements.compressStartBtn.disabled = false;
+    }
+    
+    // 显示文件结构
+    showCompressFileStructure(file);
+}
+
+// 更新压缩文件信息显示
+function updateCompressFileInfo(file) {
+    if (elements.compressFilename) {
+        elements.compressFilename.textContent = file.name;
+    }
+    
+    if (elements.compressOriginalSize) {
+        elements.compressOriginalSize.textContent = formatFileSize(file.size);
+    }
+    
+    // 预估压缩后大小
+    const estimatedSize = estimateCompressedSize(file);
+    if (elements.compressEstimatedSize) {
+        elements.compressEstimatedSize.textContent = formatFileSize(estimatedSize);
+    }
+    
+    // 计算并显示压缩率
+    const compressionRatio = Math.round((1 - estimatedSize / file.size) * 100);
+    if (elements.compressRatio) {
+        elements.compressRatio.textContent = compressionRatio + '%';
+    }
+}
+
+// 预估压缩后的大小
+function estimateCompressedSize(file) {
+    // 根据文件类型和压缩级别估算压缩率
+    let compressionRate = 0.7; // 默认压缩率
+    
+    // 根据文件类型调整压缩率
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    
+    // 已经是压缩格式的文件压缩效果较差
+    const lowCompressFormats = ['jpg', 'jpeg', 'png', 'gif', 'mp3', 'mp4', 'zip', 'rar', '7z', 'gz'];
+    if (lowCompressFormats.includes(fileExt)) {
+        compressionRate = 0.95;
+    }
+    
+    // 根据压缩级别调整
+    const level = parseInt(elements.compressLevelSlider.value) || 2;
+    if (level === 1) { // 快速
+        compressionRate += 0.1;
+    } else if (level === 3) { // 最小体积
+        compressionRate -= 0.1;
+    }
+    
+    // 确保压缩率在合理范围内
+    compressionRate = Math.max(0.4, Math.min(compressionRate, 0.98));
+    
+    return Math.round(file.size * compressionRate);
+}
+
+// 显示压缩文件结构
+function showCompressFileStructure(file) {
+    if (!elements.compressFilesTree) return;
+    
+    // 清空当前显示
+    elements.compressFilesTree.innerHTML = '';
+    
+    // 创建文件树结构
+    const fileItem = document.createElement('div');
+    fileItem.className = 'file-tree-item';
+    
+    // 文件图标
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'material-icons';
+    iconSpan.textContent = getFileIcon(file.name);
+    fileItem.appendChild(iconSpan);
+    
+    // 文件名
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'file-name';
+    nameSpan.textContent = file.name;
+    fileItem.appendChild(nameSpan);
+    
+    // 文件大小
+    const sizeSpan = document.createElement('span');
+    sizeSpan.className = 'file-size';
+    sizeSpan.textContent = formatFileSize(file.size);
+    fileItem.appendChild(sizeSpan);
+    
+    elements.compressFilesTree.appendChild(fileItem);
+}
+
+// 添加批量压缩文件
+function addBatchCompressFiles(files) {
+    // 获取当前批量文件列表
+    const currentFiles = appState.batchCompressFiles || [];
+    
+    // 添加新文件
+    Array.from(files).forEach(file => {
+        // 检查是否已存在相同文件
+        const fileExists = currentFiles.some(existingFile => 
+            existingFile.name === file.name && existingFile.size === file.size
+        );
+        
+        if (!fileExists) {
+            currentFiles.push(file);
+        }
+    });
+    
+    // 限制最多20个文件
+    if (currentFiles.length > 20) {
+        const removed = currentFiles.length - 20;
+        currentFiles.splice(20);
+        showMessage(`已达到最大文件数限制，移除了${removed}个文件`, 'warning');
+    }
+    
+    // 更新状态
+    appState.batchCompressFiles = currentFiles;
+    
+    // 更新UI
+    updateBatchCompressFilesList();
+    
+    // 激活批量压缩按钮
+    if (elements.batchCompressStart && currentFiles.length > 0) {
+        elements.batchCompressStart.disabled = false;
+    }
+}
+
+// 更新批量压缩文件列表UI
+function updateBatchCompressFilesList() {
+    if (!elements.batchCompressFileList) return;
+    
+    // 清空列表
+    elements.batchCompressFileList.innerHTML = '';
+    
+    const files = appState.batchCompressFiles || [];
+    
+    // 更新文件计数
+    if (elements.batchCompressCount) {
+        elements.batchCompressCount.textContent = `(${files.length})`;
+    }
+    
+    if (files.length === 0) {
+        // 显示空列表提示
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'empty-batch-list';
+        emptyMessage.textContent = '请添加文件以开始批量压缩';
+        elements.batchCompressFileList.appendChild(emptyMessage);
+        return;
+    }
+    
+    // 添加文件项
+    files.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'batch-file-item';
+        
+        // 文件图标
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'material-icons file-icon';
+        iconSpan.textContent = getFileIcon(file.name);
+        fileItem.appendChild(iconSpan);
+        
+        // 文件信息
+        const fileInfo = document.createElement('div');
+        fileInfo.className = 'file-info';
+        
+        const fileName = document.createElement('div');
+        fileName.className = 'file-name';
+        fileName.textContent = file.name;
+        fileInfo.appendChild(fileName);
+        
+        const fileSize = document.createElement('div');
+        fileSize.className = 'file-size';
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.appendChild(fileSize);
+        
+        fileItem.appendChild(fileInfo);
+        
+        // 删除按钮
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-file-btn';
+        removeBtn.dataset.index = index;
+        
+        const removeIcon = document.createElement('span');
+        removeIcon.className = 'material-icons';
+        removeIcon.textContent = 'close';
+        removeBtn.appendChild(removeIcon);
+        
+        removeBtn.addEventListener('click', function() {
+            removeBatchCompressFile(parseInt(this.dataset.index));
+        });
+        
+        fileItem.appendChild(removeBtn);
+        elements.batchCompressFileList.appendChild(fileItem);
+    });
+}
+
+// 从批量列表移除文件
+function removeBatchCompressFile(index) {
+    if (!appState.batchCompressFiles) return;
+    
+    appState.batchCompressFiles.splice(index, 1);
+    updateBatchCompressFilesList();
+    
+    // 如果列表为空，禁用批量压缩按钮
+    if (elements.batchCompressStart && appState.batchCompressFiles.length === 0) {
+        elements.batchCompressStart.disabled = true;
+    }
+}
+
+// 清空批量压缩文件列表
+function clearBatchCompressFiles() {
+    appState.batchCompressFiles = [];
+    updateBatchCompressFilesList();
+    
+    // 禁用批量压缩按钮
+    if (elements.batchCompressStart) {
+        elements.batchCompressStart.disabled = true;
+    }
+}
+
+// 设置压缩格式
+function setCompressFormat(format) {
+    // 更新状态
+    appState.compressFormat = format;
+    
+    // 更新UI
+    if (elements.compressFormatBtns) {
+        elements.compressFormatBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.format === format);
+        });
+    }
+    
+    // 如果有选中的文件，更新预估大小
+    if (appState.compressFile) {
+        updateCompressFileInfo(appState.compressFile);
+    }
+}
+
+// 处理压缩级别变化
+function handleCompressLevelChange() {
+    const level = parseInt(elements.compressLevelSlider.value) || 2;
+    
+    // 更新显示
+    if (elements.compressLevelValue) {
+        elements.compressLevelValue.textContent = compressLevelMap[level] || '普通';
+    }
+    
+    // 如果有选中的文件，更新预估大小
+    if (appState.compressFile) {
+        updateCompressFileInfo(appState.compressFile);
+    }
+}
+
+// 开始压缩
+function startCompression() {
+    if (!appState.compressFile) {
+        showError('请先选择需要压缩的文件');
+        return;
+    }
+    
+    // 更新状态
+    appState.isCompressing = true;
+    appState.compressedBlob = null;
+    
+    // 更新UI
+    updateCompressUI();
+    
+    // 显示进度条
+    if (elements.compressProgress) {
+        elements.compressProgress.style.display = 'block';
+    }
+    
+    // 模拟压缩进度
+    simulateCompressProgress();
+}
+
+// 取消压缩
+function cancelCompression() {
+    // 更新状态
+    appState.isCompressing = false;
+    
+    // 重置进度条
+    if (elements.compressProgressFill) {
+        elements.compressProgressFill.style.width = '0%';
+    }
+    
+    if (elements.compressProgressPercentage) {
+        elements.compressProgressPercentage.textContent = '0%';
+    }
+    
+    // 更新UI
+    updateCompressUI();
+    
+    // 显示状态消息
+    if (elements.compressStatusMessage) {
+        elements.compressStatusMessage.textContent = '已取消压缩';
+    }
+}
+
+// 模拟压缩进度
+function simulateCompressProgress() {
+    let progress = 0;
+    const interval = setInterval(() => {
+        if (!appState.isCompressing) {
+            clearInterval(interval);
+            return;
+        }
+        
+        progress += Math.random() * 3;
+        if (progress >= 100) {
+            progress = 100;
+            clearInterval(interval);
+            finishCompression();
+        }
+        
+        // 更新进度显示
+        if (elements.compressProgressFill) {
+            elements.compressProgressFill.style.width = `${progress}%`;
+        }
+        
+        if (elements.compressProgressPercentage) {
+            elements.compressProgressPercentage.textContent = `${Math.round(progress)}%`;
+        }
+        
+        // 更新状态消息
+        if (elements.compressStatusMessage) {
+            elements.compressStatusMessage.textContent = '正在压缩...';
+        }
+    }, 100);
+}
+
+// 完成压缩
+function finishCompression() {
+    // 这里实际应该调用压缩API
+    // 这是一个模拟实现
+    
+    // 创建一个模拟的压缩文件Blob
+    const file = appState.compressFile;
+    const format = appState.compressFormat;
+    const estimatedSize = estimateCompressedSize(file);
+    
+    // 创建一个示例内容（实际情况中，这应该是通过压缩算法生成的二进制数据）
+    const content = `这是一个模拟的${format}压缩文件，包含${file.name}`;
+    const blob = new Blob([content], { type: 'application/octet-stream' });
+    
+    // 更新状态
+    appState.isCompressing = false;
+    appState.compressedBlob = blob;
+    
+    // 更新UI
+    updateCompressUI();
+    
+    // 显示完成消息
+    if (elements.compressStatusMessage) {
+        elements.compressStatusMessage.textContent = '压缩完成';
+    }
+    
+    // 激活下载按钮
+    if (elements.compressDownloadBtn) {
+        elements.compressDownloadBtn.disabled = false;
+    }
+    
+    // 可以选择显示完成对话框
+    showCompressCompleteModal();
+}
+
+// 显示压缩完成模态框
+function showCompressCompleteModal() {
+    const file = appState.compressFile;
+    const format = appState.compressFormat;
+    
+    // 这里可以实现显示压缩完成后的结果对话框
+    // 简化版本：仅显示一个提示
+    showMessage(`文件已成功压缩为${format.toUpperCase()}格式，点击下载按钮保存`, 'success');
+}
+
+// 下载压缩后的文件
+function downloadCompressedFile() {
+    if (!appState.compressedBlob) {
+        showError('没有可下载的压缩文件');
+        return;
+    }
+    
+    const file = appState.compressFile;
+    const format = appState.compressFormat;
+    
+    // 创建文件名：原始文件名(不含扩展名) + 新格式扩展名
+    const originalName = file.name.split('.')[0] || 'compressed';
+    const filename = `${originalName}.${format}`;
+    
+    // 创建下载链接
+    const url = URL.createObjectURL(appState.compressedBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    
+    // 触发下载
+    document.body.appendChild(a);
+    a.click();
+    
+    // 清理
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
+
+// 更新压缩UI状态
+function updateCompressUI() {
+    const isCompressing = appState.isCompressing;
+    const hasFile = !!appState.compressFile;
+    const hasCompressedFile = !!appState.compressedBlob;
+    
+    // 更新按钮状态
+    if (elements.compressStartBtn) {
+        elements.compressStartBtn.disabled = isCompressing || !hasFile;
+    }
+    
+    if (elements.compressCancelBtn) {
+        elements.compressCancelBtn.disabled = !isCompressing;
+    }
+    
+    if (elements.compressDownloadBtn) {
+        elements.compressDownloadBtn.disabled = !hasCompressedFile;
+    }
+    
+    // 拖放区域状态
+    if (elements.compressDropArea) {
+        elements.compressDropArea.classList.toggle('disabled', isCompressing);
+    }
+    
+    // 设置区域状态
+    const settingsElements = [
+        elements.compressFormatBtns, 
+        elements.compressLevelSlider
+    ];
+    
+    settingsElements.forEach(elemArray => {
+        if (elemArray) {
+            elemArray.forEach(elem => {
+                elem.disabled = isCompressing;
+            });
+        }
+    });
 }
 
 // 当页面加载完成后初始化应用
