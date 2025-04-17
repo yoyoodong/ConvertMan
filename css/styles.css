@@ -20,6 +20,16 @@
     --error-color: #F44336;
     --warning-color: #FF9800;
     --success-color: #4CAF50;
+    
+    /* 不同标签的颜色 */
+    --image-color: #2A5CAA; /* 图像转换颜色 - 蓝色 */
+    --pdf-color: #E74C3C; /* PDF转换颜色 - 红色 */
+    --document-color: #27AE60; /* 文档转换颜色 - 绿色 */
+    --video-color: #8E44AD; /* 视频转换颜色 - 紫色 */
+    --compress-color: #F39C12; /* 压缩工具颜色 - 橙色 */
+    --history-color: #16A085; /* 历史记录颜色 - 青色 */
+    --help-color: #2C3E50; /* 帮助颜色 - 深蓝灰色 */
+    
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
@@ -33,6 +43,7 @@
     --spacing-xl: 32px;
     --transition-fast: 0.15s ease;
     --transition-normal: 0.3s ease;
+    --sidebar-width: 240px; /* 侧边栏宽度 */
 }
 
 /* 基础重置 */
@@ -905,16 +916,15 @@ select {
     .size-inputs {
         flex-direction: column;
         align-items: flex-start;
+        gap: var(--spacing-md);
     }
     
     .dimension-input {
         width: 100%;
-        margin-bottom: var(--spacing-sm);
     }
     
     .lock-ratio {
-        align-self: center;
-        margin: var(--spacing-sm) 0;
+        display: none;
     }
 }
 
@@ -1799,7 +1809,7 @@ select {
 }
 
 .result-file-icon {
-    background-color: var(--primary-color-light);
+    background-color: var(--primary-color);
     color: white;
     width: 50px;
     height: 50px;
@@ -1852,4 +1862,700 @@ select {
 .document-about-section p {
     margin-bottom: 1rem;
     line-height: 1.6;
+}
+
+/* 文件预览容器 */
+.file-preview-container {
+    margin-top: 1rem;
+    max-width: 100%;
+    max-height: 200px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: #f8f9fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.file-preview-container img, 
+.file-preview-container canvas {
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+}
+
+.preview-loading,
+.preview-error {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-color-light);
+}
+
+.preview-loading .material-icons,
+.preview-error .material-icons {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.document-preview {
+    padding: 2rem;
+    text-align: center;
+}
+
+.document-icon {
+    font-size: 4rem !important;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+/* 消息提示 */
+.message-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+
+.message-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.message-content {
+    display: flex;
+    align-items: center;
+}
+
+.message-content .material-icons {
+    margin-right: 0.75rem;
+}
+
+/* PDF转换结果区域改进 */
+.result-file {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.result-file:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 文件类型图标颜色 */
+.result-file-icon {
+    background-color: var(--primary-color);
+}
+
+.result-file-icon[data-type="pdf"] {
+    background-color: #e94335;
+}
+
+.result-file-icon[data-type="doc"] {
+    background-color: #4285f4;
+}
+
+.result-file-icon[data-type="xls"] {
+    background-color: #0f9d58;
+}
+
+.result-file-icon[data-type="ppt"] {
+    background-color: #f4b400;
+}
+
+.result-file-icon[data-type="img"] {
+    background-color: #9c27b0;
+}
+
+/* 转换完成动画 */
+@keyframes completionPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.conversion-complete {
+    animation: completionPulse 0.5s ease;
+}
+
+/* 侧边栏布局 */
+.sidebar-layout {
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.app-sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--card-bg);
+    box-shadow: var(--shadow-sm);
+    position: fixed;
+    height: 100vh;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-lg) 0;
+    border-right: 1px solid var(--border-color);
+}
+
+.app-sidebar .logo {
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.app-sidebar .logo h1 {
+    font-size: 1.3rem;
+}
+
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-nav ul {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-nav li {
+    position: relative;
+}
+
+.sidebar-nav li a {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    color: var(--text-light);
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.sidebar-nav li.active a {
+    color: var(--primary-color);
+    background-color: rgba(42, 92, 170, 0.1);
+    border-left: 3px solid var(--primary-color);
+}
+
+.sidebar-nav li a:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--primary-color);
+}
+
+.sidebar-nav .material-icons {
+    margin-right: var(--spacing-md);
+    font-size: 1.25rem;
+}
+
+.sidebar-footer {
+    padding: var(--spacing-lg);
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+    min-height: 100vh;
+}
+
+/* 修改主容器样式适应侧边栏布局 */
+.app-container {
+    padding: var(--spacing-lg);
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* 响应式布局调整 */
+@media (max-width: 992px) {
+    .app-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .app-sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .sidebar-toggle {
+        display: block;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 101;
+        background-color: var(--primary-color);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-md);
+    }
+}
+
+/* 侧边栏导航项颜色 */
+.sidebar-nav li[data-tab="image"] .material-icons {
+    color: var(--image-color);
+}
+
+.sidebar-nav li[data-tab="pdf"] .material-icons {
+    color: var(--pdf-color);
+}
+
+.sidebar-nav li[data-tab="document"] .material-icons {
+    color: var(--document-color);
+}
+
+.sidebar-nav li[data-tab="video"] .material-icons {
+    color: var(--video-color);
+}
+
+.sidebar-nav li[data-tab="compress"] .material-icons {
+    color: var(--compress-color);
+}
+
+.sidebar-nav li[data-tab="history"] .material-icons {
+    color: var(--history-color);
+}
+
+.sidebar-nav li[data-tab="help"] .material-icons {
+    color: var(--help-color);
+}
+
+/* 拖放区域样式调整 */
+#image-tab .drop-area {
+    border: 2px dashed var(--image-color);
+    background-color: rgba(42, 92, 170, 0.1);
+}
+
+#image-tab .drop-area:hover, #image-tab .drop-area.drag-over {
+    border-color: var(--image-color);
+    background-color: rgba(42, 92, 170, 0.15);
+}
+
+#image-tab .upload-btn {
+    color: var(--image-color);
+}
+
+#pdf-tab .drop-area {
+    border: 2px dashed var(--pdf-color);
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+#pdf-tab .drop-area:hover, #pdf-tab .drop-area.drag-over {
+    border-color: var(--pdf-color);
+    background-color: rgba(231, 76, 60, 0.15);
+}
+
+#pdf-tab .upload-btn {
+    color: var(--pdf-color);
+}
+
+#document-tab .drop-area {
+    border: 2px dashed var(--document-color);
+    background-color: rgba(39, 174, 96, 0.1);
+}
+
+#document-tab .drop-area:hover, #document-tab .drop-area.drag-over {
+    border-color: var(--document-color);
+    background-color: rgba(39, 174, 96, 0.15);
+}
+
+#document-tab .upload-btn {
+    color: var(--document-color);
+}
+
+#video-tab .drop-area {
+    border: 2px dashed var(--video-color);
+    background-color: rgba(142, 68, 173, 0.1);
+}
+
+#video-tab .drop-area:hover, #video-tab .drop-area.drag-over {
+    border-color: var(--video-color);
+    background-color: rgba(142, 68, 173, 0.15);
+}
+
+#video-tab .upload-btn {
+    color: var(--video-color);
+}
+
+#compress-tab .drop-area {
+    border: 2px dashed var(--compress-color);
+    background-color: rgba(243, 156, 18, 0.1);
+}
+
+#compress-tab .drop-area:hover, #compress-tab .drop-area.drag-over {
+    border-color: var(--compress-color);
+    background-color: rgba(243, 156, 18, 0.15);
+}
+
+#compress-tab .upload-btn {
+    color: var(--compress-color);
+}
+
+/* 按钮颜色调整 */
+#pdf-tab .tab-btn.active {
+    color: var(--pdf-color);
+    border-bottom-color: var(--pdf-color);
+}
+
+#pdf-tab .tab-btn:hover {
+    color: var(--pdf-color);
+}
+
+#document-tab .tab-btn.active {
+    color: var(--document-color);
+    border-bottom-color: var(--document-color);
+}
+
+#document-tab .tab-btn:hover {
+    color: var(--document-color);
+}
+
+#video-tab .tab-btn.active {
+    color: var(--video-color);
+    border-bottom-color: var(--video-color);
+}
+
+#video-tab .tab-btn:hover {
+    color: var(--video-color);
+}
+
+/* 针对不同标签页的格式按钮活跃样式 */
+#pdf-tab .format-btn.active {
+    background-color: var(--pdf-color);
+    border-color: var(--pdf-color);
+}
+
+#pdf-tab .format-btn:hover {
+    border-color: var(--pdf-color);
+    color: var(--pdf-color);
+}
+
+#document-tab .format-btn.active {
+    background-color: var(--document-color);
+    border-color: var(--document-color);
+}
+
+#document-tab .format-btn:hover {
+    border-color: var(--document-color);
+    color: var(--document-color);
+}
+
+#video-tab .format-btn.active {
+    background-color: var(--video-color);
+    border-color: var(--video-color);
+}
+
+#video-tab .format-btn:hover {
+    border-color: var(--video-color);
+    color: var(--video-color);
+}
+
+/* 质量滑块颜色匹配 */
+#pdf-tab .range-slider::-webkit-slider-thumb {
+    background: var(--pdf-color);
+}
+
+#pdf-tab .range-slider::-moz-range-thumb {
+    background: var(--pdf-color);
+}
+
+#document-tab .range-slider::-webkit-slider-thumb {
+    background: var(--document-color);
+}
+
+#document-tab .range-slider::-moz-range-thumb {
+    background: var(--document-color);
+}
+
+#video-tab .range-slider::-webkit-slider-thumb {
+    background: var(--video-color);
+}
+
+#video-tab .range-slider::-moz-range-thumb {
+    background: var(--video-color);
+}
+
+/* 根据标签调整侧边栏活跃项的颜色 */
+.sidebar-nav li[data-tab="image"].active a {
+    color: var(--image-color);
+    background-color: rgba(42, 92, 170, 0.1);
+    border-left: 3px solid var(--image-color);
+}
+
+.sidebar-nav li[data-tab="pdf"].active a {
+    color: var(--pdf-color);
+    background-color: rgba(231, 76, 60, 0.1);
+    border-left: 3px solid var(--pdf-color);
+}
+
+.sidebar-nav li[data-tab="document"].active a {
+    color: var(--document-color);
+    background-color: rgba(39, 174, 96, 0.1);
+    border-left: 3px solid var(--document-color);
+}
+
+.sidebar-nav li[data-tab="video"].active a {
+    color: var(--video-color);
+    background-color: rgba(142, 68, 173, 0.1);
+    border-left: 3px solid var(--video-color);
+}
+
+.sidebar-nav li[data-tab="compress"].active a {
+    color: var(--compress-color);
+    background-color: rgba(243, 156, 18, 0.1);
+    border-left: 3px solid var(--compress-color);
+}
+
+.sidebar-nav li[data-tab="history"].active a {
+    color: var(--history-color);
+    background-color: rgba(22, 160, 133, 0.1);
+    border-left: 3px solid var(--history-color);
+}
+
+.sidebar-nav li[data-tab="help"].active a {
+    color: var(--help-color);
+    background-color: rgba(44, 62, 80, 0.1);
+    border-left: 3px solid var(--help-color);
+}
+
+#image-tab .batch-droparea {
+    border: 2px dashed var(--image-color);
+    background-color: rgba(42, 92, 170, 0.1);
+}
+
+#image-tab .batch-droparea:hover, #image-tab .batch-droparea.drag-over {
+    border-color: var(--image-color);
+    background-color: rgba(42, 92, 170, 0.15);
+}
+
+#image-tab .batch-upload-btn {
+    color: var(--image-color);
+}
+
+#pdf-tab .batch-droparea {
+    border: 2px dashed var(--pdf-color);
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+#pdf-tab .batch-droparea:hover, #pdf-tab .batch-droparea.drag-over {
+    border-color: var(--pdf-color);
+    background-color: rgba(231, 76, 60, 0.15);
+}
+
+#pdf-tab .batch-upload-btn {
+    color: var(--pdf-color);
+}
+
+#document-tab .batch-droparea {
+    border: 2px dashed var(--document-color);
+    background-color: rgba(39, 174, 96, 0.1);
+}
+
+#document-tab .batch-droparea:hover, #document-tab .batch-droparea.drag-over {
+    border-color: var(--document-color);
+    background-color: rgba(39, 174, 96, 0.15);
+}
+
+#document-tab .batch-upload-btn {
+    color: var(--document-color);
+}
+
+#video-tab .batch-droparea {
+    border: 2px dashed var(--video-color);
+    background-color: rgba(142, 68, 173, 0.1);
+}
+
+#video-tab .batch-droparea:hover, #video-tab .batch-droparea.drag-over {
+    border-color: var(--video-color);
+    background-color: rgba(142, 68, 173, 0.15);
+}
+
+#video-tab .batch-upload-btn {
+    color: var(--video-color);
+}
+
+#pdf-tab .primary-btn {
+    background-color: var(--pdf-color);
+}
+
+#pdf-tab .primary-btn:hover {
+    background-color: rgba(231, 76, 60, 0.85);
+}
+
+#pdf-tab .success-btn {
+    background-color: var(--pdf-color);
+}
+
+#pdf-tab .success-btn:hover {
+    background-color: rgba(231, 76, 60, 0.85);
+}
+
+#document-tab .primary-btn {
+    background-color: var(--document-color);
+}
+
+#document-tab .primary-btn:hover {
+    background-color: rgba(39, 174, 96, 0.85);
+}
+
+#document-tab .success-btn {
+    background-color: var(--document-color);
+}
+
+#document-tab .success-btn:hover {
+    background-color: rgba(39, 174, 96, 0.85);
+}
+
+#video-tab .primary-btn {
+    background-color: var(--video-color);
+}
+
+#video-tab .primary-btn:hover {
+    background-color: rgba(142, 68, 173, 0.85);
+}
+
+#video-tab .success-btn {
+    background-color: var(--video-color);
+}
+
+#video-tab .success-btn:hover {
+    background-color: rgba(142, 68, 173, 0.85);
+}
+
+/* 文件压缩预览样式 */
+.compress-preview-container {
+    padding: var(--spacing-md);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.compress-info {
+    background-color: rgba(243, 156, 18, 0.05);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border: 1px solid rgba(243, 156, 18, 0.2);
+}
+
+.file-info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid rgba(243, 156, 18, 0.1);
+}
+
+.file-info-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.info-label {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.compress-files-preview {
+    flex: 1;
+    background-color: rgba(243, 156, 18, 0.05);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border: 1px solid rgba(243, 156, 18, 0.2);
+    overflow: auto;
+}
+
+.compress-files-preview h4 {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.files-tree {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.files-tree .folder {
+    margin-bottom: var(--spacing-sm);
+}
+
+.files-tree .folder-name {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.files-tree .folder-name .material-icons {
+    color: var(--compress-color);
+    font-size: 1.1rem;
+}
+
+.files-tree .files {
+    margin-left: var(--spacing-lg);
+    padding-left: var(--spacing-md);
+    border-left: 1px dashed rgba(243, 156, 18, 0.3);
+}
+
+.files-tree .file {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.files-tree .file .material-icons {
+    font-size: 1rem;
+    margin-right: var(--spacing-sm);
+    color: var(--text-light);
+}
+
+.files-tree .file-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.files-tree .file-size {
+    font-size: 0.8rem;
+    color: var(--text-lighter);
+}
+
+.no-files-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    color: var(--text-light);
+}
+
+.no-files-message .material-icons {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    color: rgba(243, 156, 18, 0.3);
 } 
