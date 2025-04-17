@@ -1254,4 +1254,602 @@ select {
     .help-content {
         grid-template-columns: 1fr;
     }
+}
+
+/* 快速转换区域样式 */
+.quick-convert-banner {
+    background: linear-gradient(135deg, var(--primary-color-light), var(--primary-color));
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.quick-convert-banner .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.quick-convert-banner h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.quick-convert-banner p {
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+}
+
+.quick-convert-panel {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+    .quick-convert-panel {
+        flex-wrap: nowrap;
+    }
+}
+
+.quick-input {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+    flex: 1 0 100%;
+}
+
+@media (min-width: 768px) {
+    .quick-input {
+        flex: 1;
+        margin-bottom: 0;
+    }
+}
+
+.quick-input button {
+    margin-right: 1rem;
+    white-space: nowrap;
+}
+
+.quick-input span {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.quick-format {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+    flex: 1 0 100%;
+}
+
+@media (min-width: 768px) {
+    .quick-format {
+        flex: 2;
+        margin-bottom: 0;
+    }
+}
+
+.quick-format label {
+    margin-right: 0.5rem;
+    white-space: nowrap;
+}
+
+.quick-format-options {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.quick-format-btn {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    margin: 0 0.25rem 0.25rem 0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quick-format-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.quick-format-btn.active {
+    background-color: white;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+#quick-convert-btn {
+    white-space: nowrap;
+    margin-bottom: 0.5rem;
+    flex: 1 0 100%;
+}
+
+@media (min-width: 768px) {
+    #quick-convert-btn {
+        flex: none;
+        margin-bottom: 0;
+    }
+}
+
+.stats-counter {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
+
+.stat-item {
+    margin: 0 1.5rem;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* 批量转换相关样式 */
+.batch-container {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .batch-container {
+        flex-direction: row;
+    }
+}
+
+.batch-droparea {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background-color: var(--background-color-light);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+    flex: 1;
+}
+
+@media (min-width: 768px) {
+    .batch-droparea {
+        margin-right: 1rem;
+        margin-bottom: 0;
+    }
+}
+
+.batch-droparea:hover, .batch-droparea.drag-over {
+    border-color: var(--primary-color);
+    background-color: var(--background-color);
+}
+
+.batch-list-container {
+    flex: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: white;
+}
+
+.batch-list-container h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color-light);
+}
+
+.batch-file-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.empty-batch-list {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-color-light);
+}
+
+.batch-file-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color-light);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    background-color: var(--background-color-light);
+}
+
+.batch-file-item:last-child {
+    margin-bottom: 0;
+}
+
+.batch-file-icon {
+    margin-right: 0.75rem;
+    color: var(--primary-color);
+}
+
+.batch-file-details {
+    flex: 1;
+}
+
+.batch-file-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.batch-file-size {
+    font-size: 0.8rem;
+    color: var(--text-color-light);
+}
+
+.batch-file-remove {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    padding: 0.25rem;
+    margin-left: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.batch-file-remove:hover {
+    background-color: rgba(var(--danger-color-rgb), 0.1);
+}
+
+.batch-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.batch-actions button {
+    margin-left: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .batch-actions {
+        justify-content: center;
+    }
+    
+    .batch-actions button {
+        margin-left: 0;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        flex: 1;
+    }
+}
+
+/* 更多工具部分 */
+.more-tools-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.tool-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.tool-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.tool-card-header {
+    background-color: var(--primary-color-light);
+    padding: 1.5rem;
+    text-align: center;
+    color: white;
+}
+
+.tool-card-header .material-icons {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.tool-card-content {
+    padding: 1.5rem;
+}
+
+.tool-card-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+.tool-description {
+    color: var(--text-color-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.tool-formats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.format-tag {
+    background-color: var(--background-color-light);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.tool-action {
+    text-align: center;
+}
+
+.tool-action .primary-btn {
+    width: 100%;
+}
+
+/* PDF和文档转换相关样式 */
+.section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.section-header p {
+    color: var(--text-color-light);
+}
+
+.conversion-type-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    background-color: var(--background-color-light);
+    padding: 0.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.conversion-type {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    margin: 0 0.5rem;
+}
+
+.conversion-type:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.conversion-type.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.conversion-type span {
+    margin-right: 0.5rem;
+}
+
+.pdf-converter-container,
+.document-converter-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 992px) {
+    .pdf-converter-container,
+    .document-converter-container {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.pdf-format-section,
+.document-format-section,
+.pdf-options-section,
+.document-options-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.format-section h3,
+.pdf-options-section h3,
+.document-options-section h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.format-section p {
+    color: var(--text-color-light);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.format-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 1rem;
+}
+
+.format-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color-light);
+    text-align: center;
+}
+
+.format-item:hover {
+    background-color: var(--background-color-light);
+    transform: translateY(-2px);
+}
+
+.format-item.active {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    border-color: var(--primary-color);
+}
+
+.format-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.format-name {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.options-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.option-item {
+    margin-bottom: 1rem;
+}
+
+.option-item label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.option-item select,
+.option-item input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.pdf-result-section,
+.document-result-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    margin-top: 2rem;
+}
+
+.pdf-result-section h3,
+.document-result-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.result-file-container {
+    margin-bottom: 1.5rem;
+}
+
+.result-file {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--border-color-light);
+    border-radius: 8px;
+    background-color: var(--background-color-light);
+}
+
+.result-file-icon {
+    background-color: var(--primary-color-light);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.result-file-icon .material-icons {
+    font-size: 2rem;
+}
+
+.result-file-info {
+    flex: 1;
+}
+
+.result-file-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.result-file-meta {
+    font-size: 0.8rem;
+    color: var(--text-color-light);
+}
+
+.result-file-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pdf-about-section,
+.document-about-section {
+    background-color: var(--background-color-light);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.pdf-about-section h3,
+.document-about-section h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.pdf-about-section p,
+.document-about-section p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
 } 

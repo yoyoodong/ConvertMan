@@ -17,19 +17,64 @@
         </div>
         <nav class="main-nav">
             <ul>
-                <li class="active" data-tab="converter"><a href="#"><span class="material-icons">autorenew</span>格式转换</a></li>
+                <li class="active" data-tab="image"><a href="#"><span class="material-icons">image</span>图像转换</a></li>
+                <li data-tab="pdf"><a href="#"><span class="material-icons">picture_as_pdf</span>PDF转换</a></li>
+                <li data-tab="document"><a href="#"><span class="material-icons">description</span>文档转换</a></li>
+                <li data-tab="video"><a href="#"><span class="material-icons">movie</span>视频转换</a></li>
+                <li data-tab="compress"><a href="#"><span class="material-icons">compress</span>文件压缩</a></li>
                 <li data-tab="history"><a href="#"><span class="material-icons">history</span>历史记录</a></li>
                 <li data-tab="help"><a href="#"><span class="material-icons">help_outline</span>使用帮助</a></li>
             </ul>
         </nav>
     </header>
 
-    <!-- 转换器部分 -->
-    <main class="app-container active" id="converter-tab">
+    <!-- 快速转换区域 -->
+    <div class="quick-convert-banner">
+        <div class="container">
+            <h2>快速转换</h2>
+            <p>无需进入详细设置，直接选择文件和目标格式，快速开始转换</p>
+            <div class="quick-convert-panel">
+                <div class="quick-input">
+                    <button class="secondary-btn" id="quick-upload-btn">
+                        <span class="material-icons">upload_file</span>选择文件
+                    </button>
+                    <input type="file" id="quick-file-input" accept="image/*" hidden multiple>
+                    <span id="quick-file-name">未选择文件</span>
+                </div>
+                <div class="quick-format">
+                    <label>转为：</label>
+                    <div class="quick-format-options">
+                        <button class="quick-format-btn active" data-format="jpg">JPG</button>
+                        <button class="quick-format-btn" data-format="png">PNG</button>
+                        <button class="quick-format-btn" data-format="webp">WEBP</button>
+                        <button class="quick-format-btn" data-format="gif">GIF</button>
+                        <button class="quick-format-btn" data-format="pdf">PDF</button>
+                    </div>
+                </div>
+                <button class="primary-btn" id="quick-convert-btn">
+                    <span class="material-icons">bolt</span>开始转换
+                </button>
+            </div>
+            <div class="stats-counter">
+                <div class="stat-item">
+                    <span class="stat-number">1,237,892</span>
+                    <span class="stat-label">已转换文件</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">72.5 GB</span>
+                    <span class="stat-label">已处理数据</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图像转换部分 -->
+    <main class="app-container active" id="image-tab">
         <section class="file-input-section">
             <div class="input-tabs">
                 <button class="tab-btn active" data-tab="local"><span class="material-icons">folder</span>本地文件</button>
                 <button class="tab-btn" data-tab="url"><span class="material-icons">link</span>URL链接</button>
+                <button class="tab-btn" data-tab="batch"><span class="material-icons">view_list</span>批量转换</button>
             </div>
             
             <div class="tab-content active" id="local-tab">
@@ -47,6 +92,37 @@
                 <div class="url-input-container">
                     <input type="text" id="url-input" placeholder="输入图像URL地址" class="url-input">
                     <button id="fetch-url" class="primary-btn"><span class="material-icons">download</span>获取</button>
+                </div>
+            </div>
+
+            <div class="tab-content" id="batch-tab">
+                <div class="batch-container">
+                    <div class="batch-droparea" id="batch-drop-area">
+                        <input type="file" id="batch-file-input" accept="image/*" hidden multiple>
+                        <div class="drop-message">
+                            <span class="material-icons large-icon">drive_folder_upload</span>
+                            <p>拖拽多个文件到此处或<span class="batch-upload-btn">点击上传</span></p>
+                            <p class="batch-limit">最多同时转换20个文件，每个文件不超过50MB</p>
+                        </div>
+                    </div>
+                    <div class="batch-list-container">
+                        <h4>待转换文件列表 <span id="batch-count">(0)</span></h4>
+                        <div class="batch-file-list" id="batch-file-list">
+                            <!-- 文件列表将通过JavaScript动态添加 -->
+                            <div class="empty-batch-list">请添加文件以开始批量转换</div>
+                        </div>
+                        <div class="batch-actions">
+                            <button id="add-more-files" class="secondary-btn">
+                                <span class="material-icons">add</span>添加更多
+                            </button>
+                            <button id="clear-batch" class="secondary-btn">
+                                <span class="material-icons">clear_all</span>清除全部
+                            </button>
+                            <button id="batch-convert" class="primary-btn" disabled>
+                                <span class="material-icons">autorenew</span>开始批量转换
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -460,7 +536,611 @@
             </div>
         </section>
     </main>
-    
+
+    <!-- PDF转换部分 -->
+    <main class="app-container" id="pdf-tab" style="display: none;">
+        <section class="pdf-converter-section">
+            <div class="section-header">
+                <h2>PDF转换工具</h2>
+                <p>将其他格式转换为PDF，或将PDF转换为其他格式</p>
+            </div>
+            
+            <div class="conversion-type-selector">
+                <div class="conversion-type active" data-conversion="to-pdf">
+                    <span class="material-icons">keyboard_double_arrow_right</span>
+                    <span>转换为PDF</span>
+                </div>
+                <div class="conversion-type" data-conversion="from-pdf">
+                    <span class="material-icons">keyboard_double_arrow_left</span>
+                    <span>从PDF转换</span>
+                </div>
+            </div>
+
+            <div class="pdf-converter-container">
+                <section class="file-input-section">
+                    <div class="input-tabs">
+                        <button class="tab-btn active" data-tab="local-pdf"><span class="material-icons">folder</span>本地文件</button>
+                        <button class="tab-btn" data-tab="url-pdf"><span class="material-icons">link</span>URL链接</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="local-pdf-tab">
+                        <div class="drop-area" id="pdf-drop-area">
+                            <input type="file" id="pdf-file-input" hidden>
+                            <div class="drop-message">
+                                <span class="material-icons large-icon">cloud_upload</span>
+                                <p>拖拽文件到此处或<span class="upload-btn" id="pdf-upload-btn">点击上传</span></p>
+                                <p class="file-limit">支持Word、Excel、PowerPoint、图像等多种格式</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="url-pdf-tab">
+                        <div class="url-input-container">
+                            <input type="text" id="pdf-url-input" placeholder="输入文件URL地址" class="url-input">
+                            <button id="pdf-fetch-url" class="primary-btn"><span class="material-icons">download</span>获取</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="pdf-format-section">
+                    <div class="format-section" id="to-pdf-formats">
+                        <h3>选择源文件格式</h3>
+                        <p>系统将自动检测您上传的文件格式，也可手动选择</p>
+                        <div class="format-grid">
+                            <div class="format-item active" data-format="auto">
+                                <span class="format-icon material-icons">auto_awesome</span>
+                                <span class="format-name">自动检测</span>
+                            </div>
+                            <div class="format-item" data-format="doc">
+                                <span class="format-icon material-icons">description</span>
+                                <span class="format-name">DOC/DOCX</span>
+                            </div>
+                            <div class="format-item" data-format="xls">
+                                <span class="format-icon material-icons">table_chart</span>
+                                <span class="format-name">XLS/XLSX</span>
+                            </div>
+                            <div class="format-item" data-format="ppt">
+                                <span class="format-icon material-icons">slideshow</span>
+                                <span class="format-name">PPT/PPTX</span>
+                            </div>
+                            <div class="format-item" data-format="image">
+                                <span class="format-icon material-icons">image</span>
+                                <span class="format-name">JPG/PNG</span>
+                            </div>
+                            <div class="format-item" data-format="html">
+                                <span class="format-icon material-icons">code</span>
+                                <span class="format-name">HTML</span>
+                            </div>
+                            <div class="format-item" data-format="txt">
+                                <span class="format-icon material-icons">text_fields</span>
+                                <span class="format-name">TXT</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="format-section" id="from-pdf-formats" style="display: none;">
+                        <h3>选择目标格式</h3>
+                        <p>选择您想要将PDF转换成的格式</p>
+                        <div class="format-grid">
+                            <div class="format-item" data-format="docx">
+                                <span class="format-icon material-icons">description</span>
+                                <span class="format-name">DOCX</span>
+                            </div>
+                            <div class="format-item" data-format="xlsx">
+                                <span class="format-icon material-icons">table_chart</span>
+                                <span class="format-name">XLSX</span>
+                            </div>
+                            <div class="format-item" data-format="pptx">
+                                <span class="format-icon material-icons">slideshow</span>
+                                <span class="format-name">PPTX</span>
+                            </div>
+                            <div class="format-item" data-format="jpg">
+                                <span class="format-icon material-icons">image</span>
+                                <span class="format-name">JPG</span>
+                            </div>
+                            <div class="format-item" data-format="png">
+                                <span class="format-icon material-icons">image</span>
+                                <span class="format-name">PNG</span>
+                            </div>
+                            <div class="format-item" data-format="txt">
+                                <span class="format-icon material-icons">text_fields</span>
+                                <span class="format-name">TXT</span>
+                            </div>
+                            <div class="format-item" data-format="html">
+                                <span class="format-icon material-icons">code</span>
+                                <span class="format-name">HTML</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="pdf-options-section">
+                    <h3>转换选项</h3>
+                    <div class="options-container">
+                        <div class="option-group" id="to-pdf-options">
+                            <div class="option-item">
+                                <label for="pdf-quality">PDF质量</label>
+                                <select id="pdf-quality">
+                                    <option value="high">高质量 (大文件)</option>
+                                    <option value="medium" selected>中等质量 (推荐)</option>
+                                    <option value="low">低质量 (小文件)</option>
+                                </select>
+                            </div>
+                            <div class="option-item">
+                                <label for="pdf-page-size">页面大小</label>
+                                <select id="pdf-page-size">
+                                    <option value="a4" selected>A4 (210×297mm)</option>
+                                    <option value="letter">Letter (216×279mm)</option>
+                                    <option value="legal">Legal (216×356mm)</option>
+                                    <option value="original">保持原始大小</option>
+                                </select>
+                            </div>
+                            <div class="option-item">
+                                <label for="pdf-orientation">页面方向</label>
+                                <select id="pdf-orientation">
+                                    <option value="auto" selected>自动检测</option>
+                                    <option value="portrait">纵向</option>
+                                    <option value="landscape">横向</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="option-group" id="from-pdf-options" style="display: none;">
+                            <div class="option-item">
+                                <label for="pdf-page-range">页面范围</label>
+                                <input type="text" id="pdf-page-range" placeholder="例如：1-5,8,11-13" value="全部">
+                            </div>
+                            <div class="option-item">
+                                <label for="extract-images">提取嵌入图像</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="extract-images">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="option-item">
+                                <label for="convert-quality">输出质量</label>
+                                <select id="convert-quality">
+                                    <option value="high">高质量</option>
+                                    <option value="medium" selected>中等质量</option>
+                                    <option value="low">低质量</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="action-section">
+                    <div class="progress-container">
+                        <div class="progress-bar" id="pdf-conversion-progress">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <div class="progress-status">
+                            <span id="pdf-status-message">准备就绪</span>
+                            <span id="pdf-progress-percentage">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="pdf-convert-btn" class="primary-btn" disabled>
+                            <span class="material-icons">autorenew</span>开始转换
+                        </button>
+                        <button id="pdf-cancel-btn" class="secondary-btn" disabled>
+                            <span class="material-icons">cancel</span>取消
+                        </button>
+                    </div>
+                </section>
+            </div>
+            
+            <section class="pdf-result-section" style="display: none;">
+                <h3>转换结果</h3>
+                <div class="result-file-container">
+                    <div class="result-file">
+                        <div class="result-file-icon">
+                            <span class="material-icons">picture_as_pdf</span>
+                        </div>
+                        <div class="result-file-info">
+                            <div class="result-file-name" id="pdf-result-filename">document.pdf</div>
+                            <div class="result-file-meta">
+                                <span id="pdf-result-size">245 KB</span> • 
+                                <span id="pdf-result-date">刚刚完成</span>
+                            </div>
+                        </div>
+                        <div class="result-file-actions">
+                            <button class="icon-btn" id="pdf-download-btn" title="下载">
+                                <span class="material-icons">file_download</span>
+                            </button>
+                            <button class="icon-btn" id="pdf-share-btn" title="分享">
+                                <span class="material-icons">share</span>
+                            </button>
+                            <button class="icon-btn" id="pdf-cloud-btn" title="保存到云盘">
+                                <span class="material-icons">cloud_upload</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pdf-about-section">
+                    <h3>关于PDF格式</h3>
+                    <p>PDF（Portable Document Format的简称，意为"便携式文档格式"），是由Adobe Systems用于与应用程序、操作系统、硬件无关的方式进行文件交换所发展出的文件格式。PDF文件以PostScript语言图象模型为基础，无论在哪种打印机上都可保证精确的颜色和准确的打印效果，即PDF会忠实地再现原稿的每一个字符、颜色以及图象。</p>
+                    <p>此PDF在线转换器支持各类转换包括Word转PDF，Excel转PDF，PowerPoint转PDF，JPG转PDF，PDF转Word，PDF转JPG等。</p>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <!-- 文档转换部分 -->
+    <main class="app-container" id="document-tab" style="display: none;">
+        <section class="document-converter-section">
+            <div class="section-header">
+                <h2>文档转换工具</h2>
+                <p>将文档转换为其他格式，或将其他格式转换为文档</p>
+            </div>
+            
+            <div class="conversion-type-selector">
+                <div class="conversion-type active" data-conversion="to-document">
+                    <span class="material-icons">keyboard_double_arrow_right</span>
+                    <span>转换为文档</span>
+                </div>
+                <div class="conversion-type" data-conversion="from-document">
+                    <span class="material-icons">keyboard_double_arrow_left</span>
+                    <span>从文档转换</span>
+                </div>
+            </div>
+
+            <div class="document-converter-container">
+                <section class="file-input-section">
+                    <div class="input-tabs">
+                        <button class="tab-btn active" data-tab="local-document"><span class="material-icons">folder</span>本地文件</button>
+                        <button class="tab-btn" data-tab="url-document"><span class="material-icons">link</span>URL链接</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="local-document-tab">
+                        <div class="drop-area" id="document-drop-area">
+                            <input type="file" id="document-file-input" hidden>
+                            <div class="drop-message">
+                                <span class="material-icons large-icon">cloud_upload</span>
+                                <p>拖拽文件到此处或<span class="upload-btn" id="document-upload-btn">点击上传</span></p>
+                                <p class="file-limit">支持Word、Excel、PowerPoint、PDF等多种格式</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="url-document-tab">
+                        <div class="url-input-container">
+                            <input type="text" id="document-url-input" placeholder="输入文件URL地址" class="url-input">
+                            <button id="document-fetch-url" class="primary-btn"><span class="material-icons">download</span>获取</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="document-format-section">
+                    <div class="format-section" id="to-document-formats">
+                        <h3>选择源文件格式</h3>
+                        <p>系统将自动检测您上传的文件格式，也可手动选择</p>
+                        <div class="format-grid">
+                            <div class="format-item active" data-format="auto">
+                                <span class="format-icon material-icons">auto_awesome</span>
+                                <span class="format-name">自动检测</span>
+                            </div>
+                            <div class="format-item" data-format="doc">
+                                <span class="format-icon material-icons">description</span>
+                                <span class="format-name">DOC/DOCX</span>
+                            </div>
+                            <div class="format-item" data-format="xls">
+                                <span class="format-icon material-icons">table_chart</span>
+                                <span class="format-name">XLS/XLSX</span>
+                            </div>
+                            <div class="format-item" data-format="ppt">
+                                <span class="format-icon material-icons">slideshow</span>
+                                <span class="format-name">PPT/PPTX</span>
+                            </div>
+                            <div class="format-item" data-format="pdf">
+                                <span class="format-icon material-icons">picture_as_pdf</span>
+                                <span class="format-name">PDF</span>
+                            </div>
+                            <div class="format-item" data-format="html">
+                                <span class="format-icon material-icons">code</span>
+                                <span class="format-name">HTML</span>
+                            </div>
+                            <div class="format-item" data-format="txt">
+                                <span class="format-icon material-icons">text_fields</span>
+                                <span class="format-name">TXT</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="format-section" id="from-document-formats" style="display: none;">
+                        <h3>选择目标格式</h3>
+                        <p>选择您想要将文档转换成的格式</p>
+                        <div class="format-grid">
+                            <div class="format-item" data-format="docx">
+                                <span class="format-icon material-icons">description</span>
+                                <span class="format-name">DOCX</span>
+                            </div>
+                            <div class="format-item" data-format="xlsx">
+                                <span class="format-icon material-icons">table_chart</span>
+                                <span class="format-name">XLSX</span>
+                            </div>
+                            <div class="format-item" data-format="pptx">
+                                <span class="format-icon material-icons">slideshow</span>
+                                <span class="format-name">PPTX</span>
+                            </div>
+                            <div class="format-item" data-format="jpg">
+                                <span class="format-icon material-icons">image</span>
+                                <span class="format-name">JPG</span>
+                            </div>
+                            <div class="format-item" data-format="png">
+                                <span class="format-icon material-icons">image</span>
+                                <span class="format-name">PNG</span>
+                            </div>
+                            <div class="format-item" data-format="txt">
+                                <span class="format-icon material-icons">text_fields</span>
+                                <span class="format-name">TXT</span>
+                            </div>
+                            <div class="format-item" data-format="html">
+                                <span class="format-icon material-icons">code</span>
+                                <span class="format-name">HTML</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="document-options-section">
+                    <h3>转换选项</h3>
+                    <div class="options-container">
+                        <div class="option-group" id="to-document-options">
+                            <div class="option-item">
+                                <label for="document-quality">文档质量</label>
+                                <select id="document-quality">
+                                    <option value="high">高质量</option>
+                                    <option value="medium" selected>中等质量</option>
+                                    <option value="low">低质量</option>
+                                </select>
+                            </div>
+                            <div class="option-item">
+                                <label for="document-page-size">页面大小</label>
+                                <select id="document-page-size">
+                                    <option value="a4" selected>A4 (210×297mm)</option>
+                                    <option value="letter">Letter (216×279mm)</option>
+                                    <option value="legal">Legal (216×356mm)</option>
+                                    <option value="original">保持原始大小</option>
+                                </select>
+                            </div>
+                            <div class="option-item">
+                                <label for="document-orientation">页面方向</label>
+                                <select id="document-orientation">
+                                    <option value="auto" selected>自动检测</option>
+                                    <option value="portrait">纵向</option>
+                                    <option value="landscape">横向</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="option-group" id="from-document-options" style="display: none;">
+                            <div class="option-item">
+                                <label for="document-page-range">页面范围</label>
+                                <input type="text" id="document-page-range" placeholder="例如：1-5,8,11-13" value="全部">
+                            </div>
+                            <div class="option-item">
+                                <label for="extract-images">提取嵌入图像</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="extract-images">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="option-item">
+                                <label for="convert-quality">输出质量</label>
+                                <select id="convert-quality">
+                                    <option value="high">高质量</option>
+                                    <option value="medium" selected>中等质量</option>
+                                    <option value="low">低质量</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="action-section">
+                    <div class="progress-container">
+                        <div class="progress-bar" id="document-conversion-progress">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <div class="progress-status">
+                            <span id="document-status-message">准备就绪</span>
+                            <span id="document-progress-percentage">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="document-convert-btn" class="primary-btn" disabled>
+                            <span class="material-icons">autorenew</span>开始转换
+                        </button>
+                        <button id="document-cancel-btn" class="secondary-btn" disabled>
+                            <span class="material-icons">cancel</span>取消
+                        </button>
+                    </div>
+                </section>
+            </div>
+            
+            <section class="document-result-section" style="display: none;">
+                <h3>转换结果</h3>
+                <div class="result-file-container">
+                    <div class="result-file">
+                        <div class="result-file-icon">
+                            <span class="material-icons">description</span>
+                        </div>
+                        <div class="result-file-info">
+                            <div class="result-file-name" id="document-result-filename">document.docx</div>
+                            <div class="result-file-meta">
+                                <span id="document-result-size">245 KB</span> • 
+                                <span id="document-result-date">刚刚完成</span>
+                            </div>
+                        </div>
+                        <div class="result-file-actions">
+                            <button class="icon-btn" id="document-download-btn" title="下载">
+                                <span class="material-icons">file_download</span>
+                            </button>
+                            <button class="icon-btn" id="document-share-btn" title="分享">
+                                <span class="material-icons">share</span>
+                            </button>
+                            <button class="icon-btn" id="document-cloud-btn" title="保存到云盘">
+                                <span class="material-icons">cloud_upload</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="document-about-section">
+                    <h3>关于文档格式</h3>
+                    <p>文档格式通常用于存储和交换文本信息，包括文字、图像、表格、图表等。常见的文档格式包括Word文档（.doc, .docx）、Excel电子表格（.xls, .xlsx）、PowerPoint演示文稿（.ppt, .pptx）等。</p>
+                    <p>此文档转换工具支持将各种文档格式转换为其他格式，或将其他格式转换为文档格式。</p>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <!-- 更多工具部分 -->
+    <main class="app-container" id="more-tab" style="display: none;">
+        <section class="more-tools-section">
+            <div class="more-tools-header">
+                <h2>更多实用工具</h2>
+                <p>除了图片转换外，我们还提供多种其他格式转换和实用工具</p>
+            </div>
+            
+            <div class="more-tools-container">
+                <div class="tool-card">
+                    <div class="tool-card-header">
+                        <span class="material-icons">picture_as_pdf</span>
+                        <h3>PDF工具</h3>
+                    </div>
+                    <div class="tool-card-content">
+                        <div class="tool-card-title">PDF格式转换</div>
+                        <p class="tool-description">转换PDF文件到其他格式，或将其他格式转换为PDF，支持合并、拆分、压缩PDF</p>
+                        <div class="tool-formats">
+                            <span class="format-tag">PDF→JPG</span>
+                            <span class="format-tag">PDF→PNG</span>
+                            <span class="format-tag">PDF→DOCX</span>
+                            <span class="format-tag">JPG→PDF</span>
+                        </div>
+                        <div class="tool-action">
+                            <button class="primary-btn">进入工具</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-card-header">
+                        <span class="material-icons">description</span>
+                        <h3>文档工具</h3>
+                    </div>
+                    <div class="tool-card-content">
+                        <div class="tool-card-title">文档格式转换</div>
+                        <p class="tool-description">各类文档格式互转，支持Word、Excel、PPT等办公文档格式</p>
+                        <div class="tool-formats">
+                            <span class="format-tag">DOC→DOCX</span>
+                            <span class="format-tag">DOCX→PDF</span>
+                            <span class="format-tag">XLS→XLSX</span>
+                            <span class="format-tag">PPT→PDF</span>
+                        </div>
+                        <div class="tool-action">
+                            <button class="primary-btn">进入工具</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-card-header">
+                        <span class="material-icons">video_library</span>
+                        <h3>视频工具</h3>
+                    </div>
+                    <div class="tool-card-content">
+                        <div class="tool-card-title">视频格式转换</div>
+                        <p class="tool-description">转换视频到各种格式，调整分辨率，提取音频，支持剪辑功能</p>
+                        <div class="tool-formats">
+                            <span class="format-tag">MP4→AVI</span>
+                            <span class="format-tag">MP4→GIF</span>
+                            <span class="format-tag">MKV→MP4</span>
+                            <span class="format-tag">MOV→MP4</span>
+                        </div>
+                        <div class="tool-action">
+                            <button class="primary-btn">进入工具</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-card-header">
+                        <span class="material-icons">audiotrack</span>
+                        <h3>音频工具</h3>
+                    </div>
+                    <div class="tool-card-content">
+                        <div class="tool-card-title">音频格式转换</div>
+                        <p class="tool-description">各类音频格式互转，支持调整比特率、采样率、音量等</p>
+                        <div class="tool-formats">
+                            <span class="format-tag">MP3→WAV</span>
+                            <span class="format-tag">MP3→AAC</span>
+                            <span class="format-tag">WAV→MP3</span>
+                            <span class="format-tag">M4A→MP3</span>
+                        </div>
+                        <div class="tool-action">
+                            <button class="primary-btn">进入工具</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-card-header">
+                        <span class="material-icons">auto_awesome_mosaic</span>
+                        <h3>图像处理</h3>
+                    </div>
+                    <div class="tool-card-content">
+                        <div class="tool-card-title">高级图像编辑</div>
+                        <p class="tool-description">除格式转换外，还支持裁剪、旋转、加滤镜、添加水印等编辑功能</p>
+                        <div class="tool-formats">
+                            <span class="format-tag">裁剪</span>
+                            <span class="format-tag">调整尺寸</span>
+                            <span class="format-tag">滤镜</span>
+                            <span class="format-tag">水印</span>
+                        </div>
+                        <div class="tool-action">
+                            <button class="primary-btn">进入工具</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-card-header">
+                        <span class="material-icons">compress</span>
+                        <h3>压缩工具</h3>
+                    </div>
+                    <div class="tool-card-content">
+                        <div class="tool-card-title">文件压缩与解压</div>
+                        <p class="tool-description">压缩文件减小体积，解压ZIP、RAR等常见压缩格式</p>
+                        <div class="tool-formats">
+                            <span class="format-tag">ZIP</span>
+                            <span class="format-tag">RAR</span>
+                            <span class="format-tag">7Z</span>
+                            <span class="format-tag">TAR.GZ</span>
+                        </div>
+                        <div class="tool-action">
+                            <button class="primary-btn">进入工具</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="coming-soon-banner">
+                <div class="coming-soon-icon">
+                    <span class="material-icons">update</span>
+                </div>
+                <div class="coming-soon-content">
+                    <h3>更多功能即将上线</h3>
+                    <p>我们正在开发更多实用工具，敬请期待！您有任何功能建议，请<a href="#">联系我们</a></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
     <footer class="app-footer">
         <p>免费图片转换器 &copy; 2023 | 安全·高效·专业</p>
         <div class="footer-links">

@@ -78,6 +78,58 @@ const elements = {
     historySearchBtn: document.getElementById('history-search-btn'),
     clearAllHistory: document.getElementById('clear-all-history'),
     historyPagination: document.querySelector('.history-pagination'),
+    
+    // 新增快速转换相关
+    quickUploadBtn: document.getElementById('quick-upload-btn'),
+    quickFileInput: document.getElementById('quick-file-input'),
+    quickFileName: document.getElementById('quick-file-name'),
+    quickFormatBtns: document.querySelectorAll('.quick-format-btn'),
+    quickConvertBtn: document.getElementById('quick-convert-btn'),
+    
+    // 新增批量转换相关
+    batchDropArea: document.getElementById('batch-drop-area'),
+    batchFileInput: document.getElementById('batch-file-input'),
+    batchUploadBtn: document.querySelector('.batch-upload-btn'),
+    batchFileList: document.getElementById('batch-file-list'),
+    batchCount: document.getElementById('batch-count'),
+    addMoreFilesBtn: document.getElementById('add-more-files'),
+    clearBatchBtn: document.getElementById('clear-batch'),
+    batchConvertBtn: document.getElementById('batch-convert'),
+    
+    // 主导航标签页相关
+    imageTab: document.getElementById('image-tab'),
+    pdfTab: document.getElementById('pdf-tab'),
+    documentTab: document.getElementById('document-tab'),
+    videoTab: document.getElementById('video-tab'),
+    compressTab: document.getElementById('compress-tab'),
+    
+    // PDF转换相关元素
+    pdfUploadBtn: document.getElementById('pdf-upload-btn'),
+    pdfFileInput: document.getElementById('pdf-file-input'),
+    pdfDropArea: document.getElementById('pdf-drop-area'),
+    pdfUrlInput: document.getElementById('pdf-url-input'),
+    pdfFetchUrl: document.getElementById('pdf-fetch-url'),
+    pdfConvertBtn: document.getElementById('pdf-convert-btn'),
+    pdfCancelBtn: document.getElementById('pdf-cancel-btn'),
+    pdfFormatItems: document.querySelectorAll('.format-item'),
+    conversionTypes: document.querySelectorAll('.conversion-type'),
+    toPdfFormats: document.getElementById('to-pdf-formats'),
+    fromPdfFormats: document.getElementById('from-pdf-formats'),
+    toPdfOptions: document.getElementById('to-pdf-options'),
+    fromPdfOptions: document.getElementById('from-pdf-options'),
+    pdfResultSection: document.querySelector('.pdf-result-section'),
+    pdfDownloadBtn: document.getElementById('pdf-download-btn'),
+    pdfShareBtn: document.getElementById('pdf-share-btn'),
+    pdfCloudBtn: document.getElementById('pdf-cloud-btn'),
+    
+    // 文档转换相关元素
+    documentUploadBtn: document.getElementById('document-upload-btn'),
+    documentFileInput: document.getElementById('document-file-input'),
+    documentDropArea: document.getElementById('document-drop-area'),
+    documentUrlInput: document.getElementById('document-url-input'),
+    documentFetchUrl: document.getElementById('document-fetch-url'),
+    documentConvertBtn: document.getElementById('document-convert-btn'),
+    documentCancelBtn: document.getElementById('document-cancel-btn'),
 };
 
 // 应用状态
@@ -93,11 +145,32 @@ const appState = {
     isConverting: false,
     aspectRatio: 1,
     convertedBlob: null,
-    currentMainTab: 'converter',
+    currentMainTab: 'image',
     historyItems: [],
     historyPage: 1,
     historyPerPage: 5,
     historySearch: '',
+    
+    // 新增快速转换相关状态
+    quickFile: null,
+    quickSelectedFormat: 'jpg',
+    
+    // 新增批量转换相关状态
+    batchFiles: [],
+    batchConversionInProgress: false,
+    batchConversionCompleted: 0,
+    
+    pdfFile: null,
+    pdfConversionType: 'to-pdf',
+    pdfSelectedFormat: 'auto',
+    pdfIsConverting: false,
+    pdfConvertedBlob: null,
+    
+    documentFile: null,
+    documentConversionType: 'to-document',
+    documentSelectedFormat: 'auto',
+    documentIsConverting: false,
+    documentConvertedBlob: null,
 };
 
 // 初始化应用
@@ -190,6 +263,66 @@ function bindEventListeners() {
             deleteFromHistory(itemIndex);
         }
     });
+    
+    // 新增快速转换相关事件
+    elements.quickUploadBtn.addEventListener('click', () => elements.quickFileInput.click());
+    elements.quickFileInput.addEventListener('change', handleQuickFileSelect);
+    elements.quickFormatBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setQuickFormat(btn.dataset.format);
+        });
+    });
+    elements.quickConvertBtn.addEventListener('click', startQuickConversion);
+    
+    // 新增批量转换相关事件
+    elements.batchUploadBtn.addEventListener('click', () => elements.batchFileInput.click());
+    elements.batchFileInput.addEventListener('change', handleBatchFilesSelect);
+    elements.batchDropArea.addEventListener('dragover', handleBatchDragOver);
+    elements.batchDropArea.addEventListener('dragleave', handleBatchDragLeave);
+    elements.batchDropArea.addEventListener('drop', handleBatchFileDrop);
+    elements.addMoreFilesBtn.addEventListener('click', () => elements.batchFileInput.click());
+    elements.clearBatchBtn.addEventListener('click', clearBatchFiles);
+    elements.batchConvertBtn.addEventListener('click', startBatchConversion);
+    
+    // PDF转换相关事件
+    if (elements.pdfUploadBtn) {
+        elements.pdfUploadBtn.addEventListener('click', () => elements.pdfFileInput.click());
+        elements.pdfFileInput.addEventListener('change', handlePdfFileSelect);
+        elements.pdfDropArea.addEventListener('dragover', handlePdfDragOver);
+        elements.pdfDropArea.addEventListener('dragleave', handlePdfDragLeave);
+        elements.pdfDropArea.addEventListener('drop', handlePdfFileDrop);
+        elements.pdfFetchUrl.addEventListener('click', handlePdfUrlFetch);
+        elements.pdfConvertBtn.addEventListener('click', startPdfConversion);
+        elements.pdfCancelBtn.addEventListener('click', cancelPdfConversion);
+        elements.pdfDownloadBtn.addEventListener('click', downloadPdfConvertedFile);
+        elements.pdfShareBtn.addEventListener('click', sharePdfConvertedFile);
+        
+        // 格式选择
+        elements.pdfFormatItems.forEach(item => {
+            item.addEventListener('click', () => {
+                selectPdfFormat(item.dataset.format);
+            });
+        });
+        
+        // 转换类型切换
+        elements.conversionTypes.forEach(item => {
+            item.addEventListener('click', () => {
+                switchConversionType(item.dataset.conversion);
+            });
+        });
+    }
+    
+    // 文档转换相关事件
+    if (elements.documentUploadBtn) {
+        elements.documentUploadBtn.addEventListener('click', () => elements.documentFileInput.click());
+        elements.documentFileInput.addEventListener('change', handleDocumentFileSelect);
+        elements.documentDropArea.addEventListener('dragover', handleDocumentDragOver);
+        elements.documentDropArea.addEventListener('dragleave', handleDocumentDragLeave);
+        elements.documentDropArea.addEventListener('drop', handleDocumentFileDrop);
+        elements.documentFetchUrl.addEventListener('click', handleDocumentUrlFetch);
+        elements.documentConvertBtn.addEventListener('click', startDocumentConversion);
+        elements.documentCancelBtn.addEventListener('click', cancelDocumentConversion);
+    }
 }
 
 // 处理文件选择
