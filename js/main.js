@@ -1,6 +1,6 @@
 /**
- * 格式转码侠 - 主脚本文件
- * 实现图像格式转换工具的核心功能
+ * ConvertMan - 主脚本文件
+ * 实现格式转换工具的核心功能
  */
 
 // DOM元素引用
@@ -66,10 +66,7 @@ const elements = {
     modalShareBtn: document.getElementById('modal-share-btn'),
     
     // 主标签页切换相关
-    mainNavItems: document.querySelectorAll('.main-nav li'),
-    converterTab: document.getElementById('converter-tab'),
-    historyTab: document.getElementById('history-tab'),
-    helpTab: document.getElementById('help-tab'),
+    sidebarNavItems: document.querySelectorAll('.sidebar-nav li'),
     
     // 历史记录相关
     historyList: document.getElementById('history-list'),
@@ -97,11 +94,7 @@ const elements = {
     batchConvertBtn: document.getElementById('batch-convert'),
     
     // 主导航标签页相关
-    imageTab: document.getElementById('image-tab'),
-    pdfTab: document.getElementById('pdf-tab'),
-    documentTab: document.getElementById('document-tab'),
-    videoTab: document.getElementById('video-tab'),
-    compressTab: document.getElementById('compress-tab'),
+    appContainers: document.querySelectorAll('.app-container'),
     
     // PDF转换相关元素
     pdfUploadBtn: document.getElementById('pdf-upload-btn'),
@@ -130,6 +123,37 @@ const elements = {
     documentFetchUrl: document.getElementById('document-fetch-url'),
     documentConvertBtn: document.getElementById('document-convert-btn'),
     documentCancelBtn: document.getElementById('document-cancel-btn'),
+    
+    // 文件压缩相关元素
+    compressFileInput: document.getElementById('compress-file-input'),
+    compressDropArea: document.getElementById('compress-drop-area'),
+    batchCompressFileInput: document.getElementById('batch-compress-file-input'),
+    batchCompressDropArea: document.getElementById('batch-compress-drop-area'),
+    compressStartBtn: document.getElementById('compress-start-btn'),
+    compressCancelBtn: document.getElementById('compress-cancel-btn'),
+    compressDownloadBtn: document.getElementById('compress-download-btn'),
+    compressLevelSlider: document.getElementById('compress-level-slider'),
+    compressLevelValue: document.getElementById('compress-level-value'),
+    compressFormatBtns: document.querySelectorAll('#compress-tab .format-btn'),
+    compressFilename: document.getElementById('compress-filename'),
+    compressOriginalSize: document.getElementById('compress-original-size'),
+    compressEstimatedSize: document.getElementById('compress-estimated-size'),
+    compressRatio: document.getElementById('compress-ratio'),
+    compressFilesTree: document.getElementById('compress-files-tree'),
+    compressProgress: document.getElementById('compress-progress'),
+    compressStatusMessage: document.getElementById('compress-status-message'),
+    compressProgressPercentage: document.getElementById('compress-progress-percentage'),
+    compressPassword: document.getElementById('compress-password'),
+    splitArchive: document.getElementById('split-archive'),
+    saveFolderStructure: document.getElementById('save-folder-structure'),
+    addMoreCompressFiles: document.getElementById('add-more-compress-files'),
+    clearBatchCompress: document.getElementById('clear-batch-compress'),
+    batchCompressStart: document.getElementById('batch-compress-start'),
+    batchCompressCount: document.getElementById('batch-compress-count'),
+    batchCompressFileList: document.getElementById('batch-compress-file-list'),
+    
+    // 压缩标签页相关元素
+    compressTabBtns: document.querySelectorAll('#compress-tab .input-tabs .tab-btn'),
 };
 
 // 应用状态
@@ -171,157 +195,1296 @@ const appState = {
     documentSelectedFormat: 'auto',
     documentIsConverting: false,
     documentConvertedBlob: null,
+    
+    // 移动设备响应式状态
+    isMobileMenuOpen: false,
+    
+    // 文件压缩相关状态
+    compressFile: null,
+    compressFiles: [],
+    compressFormat: 'zip',
+    compressLevel: 2,
+    isCompressing: false,
+    compressedBlob: null,
+    batchCompressFiles: [],
+    batchCompressInProgress: false,
+    batchCompressCompleted: 0,
 };
 
-// 初始化应用
+// 压缩级别映射
+const compressLevelMap = {
+    1: '快速',
+    2: '普通',
+    3: '最小体积'
+};
+
+// 文件类型图标映射
+const fileTypeIcons = {
+    'pdf': 'picture_as_pdf',
+    'doc': 'description',
+    'docx': 'description',
+    'xls': 'table_chart',
+    'xlsx': 'table_chart',
+    'ppt': 'slideshow',
+    'pptx': 'slideshow',
+    'txt': 'text_format',
+    'jpg': 'image',
+    'jpeg': 'image',
+    'png': 'image',
+    'gif': 'image',
+    'webp': 'image',
+    'svg': 'image',
+    'mp3': 'audiotrack',
+    'mp4': 'videocam',
+    'zip': 'folder_zip',
+    'rar': 'folder_zip',
+    '7z': 'folder_zip',
+    'tar': 'folder_zip',
+    'gz': 'folder_zip',
+    'default': 'insert_drive_file'
+};
+
+// 获取文件类型图标
+function getFileIcon(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    return fileTypeIcons[ext] || fileTypeIcons.default;
+}
+
+// 应用初始化时加载PDF.js库
 function initApp() {
     bindEventListeners();
     updateUI();
+    
+    // 应用各标签页的特定颜色主题
+    applyTabColorThemes();
+    
+    // 加载PDF.js库
+    loadPdfJsLibrary();
+    
+    // 当页面加载完成后，再次检查DOM元素并绑定事件
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            rebindPdfEvents();
+        }, 100);
+    });
+
+    // 检查并应用响应式布局
+    checkResponsiveLayout();
+    window.addEventListener('resize', checkResponsiveLayout);
 }
 
-// 绑定事件监听器
-function bindEventListeners() {
-    // 文件上传相关事件
-    elements.uploadBtn.addEventListener('click', () => elements.fileInput.click());
-    elements.fileInput.addEventListener('change', handleFileSelect);
-    elements.dropArea.addEventListener('dragover', handleDragOver);
-    elements.dropArea.addEventListener('dragleave', handleDragLeave);
-    elements.dropArea.addEventListener('drop', handleFileDrop);
-    elements.fetchUrlBtn.addEventListener('click', handleUrlFetch);
+// 检查响应式布局
+function checkResponsiveLayout() {
+    const isMobile = window.innerWidth < 768;
+    document.body.classList.toggle('mobile-view', isMobile);
     
-    // 格式选择事件
-    elements.formatBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            setFormat(btn.dataset.format);
+    // 如果是移动设备，默认隐藏侧边栏
+    if (isMobile && !document.body.classList.contains('sidebar-open')) {
+        document.body.classList.add('sidebar-collapsed');
+    }
+}
+
+// 加载PDF.js库
+function loadPdfJsLibrary() {
+    // 检查是否已加载
+    if (document.getElementById('pdf-js-script')) return;
+    
+    // 创建脚本标签并加载PDF.js
+    const script = document.createElement('script');
+    script.id = 'pdf-js-script';
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+    script.async = true;
+    
+    script.onload = function() {
+        // 设置worker路径
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        console.log('PDF.js库加载成功');
+    };
+    
+    script.onerror = function() {
+        console.error('PDF.js库加载失败');
+    };
+    
+    document.head.appendChild(script);
+}
+
+// 重新绑定PDF相关事件
+function rebindPdfEvents() {
+    // 检查PDF相关元素并绑定事件
+    if (elements.pdfUploadBtn && elements.pdfFileInput) {
+        elements.pdfUploadBtn.addEventListener('click', function() {
+            elements.pdfFileInput.click();
         });
-    });
-    
-    // 质量设置事件
-    elements.qualitySlider.addEventListener('input', handleQualityChange);
-    
-    // 尺寸设置事件
-    elements.widthInput.addEventListener('input', handleWidthChange);
-    elements.heightInput.addEventListener('input', handleHeightChange);
-    elements.ratioLock.addEventListener('click', toggleRatioLock);
-    
-    // 预览控制事件
-    elements.zoomIn.addEventListener('click', zoomIn);
-    elements.zoomOut.addEventListener('click', zoomOut);
-    elements.toggleSplit.addEventListener('click', toggleSplitView);
-    
-    // 操作按钮事件
-    elements.convertBtn.addEventListener('click', startConversion);
-    elements.cancelBtn.addEventListener('click', cancelConversion);
-    elements.downloadBtn.addEventListener('click', downloadConvertedImage);
-    
-    // 标签切换事件
-    elements.tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            switchTab(btn.dataset.tab);
-        });
-    });
-    
-    // 错误提示事件
-    elements.closeError.addEventListener('click', hideError);
-    
-    // 弹窗事件
-    elements.modalClose.addEventListener('click', hideModal);
-    elements.modalDownloadBtn.addEventListener('click', downloadConvertedImage);
-    elements.modalShareBtn.addEventListener('click', shareConvertedImage);
-    
-    // 高级选项变更事件
-    elements.metadataToggle.addEventListener('change', updatePreview);
-    elements.compressionType.addEventListener('change', updatePreview);
-    
-    // 主标签页切换事件
-    elements.mainNavItems.forEach(item => {
-        item.addEventListener('click', () => {
-            switchMainTab(item.dataset.tab);
-        });
-    });
-    
-    // 历史记录相关事件
-    elements.historySearchBtn.addEventListener('click', searchHistory);
-    elements.historySearchInput.addEventListener('keyup', event => {
-        if (event.key === 'Enter') searchHistory();
-    });
-    elements.clearAllHistory.addEventListener('click', clearAllHistory);
-    
-    // 委托事件绑定，处理历史记录项的操作
-    elements.historyList.addEventListener('click', event => {
-        const target = event.target.closest('button');
-        if (!target) return;
         
-        const historyItem = target.closest('.history-item');
-        if (!historyItem) return;
-        
-        const itemIndex = historyItem.dataset.index;
-        
-        if (target.classList.contains('history-download')) {
-            downloadFromHistory(itemIndex);
-        } else if (target.classList.contains('history-delete')) {
-            deleteFromHistory(itemIndex);
-        }
-    });
-    
-    // 新增快速转换相关事件
-    elements.quickUploadBtn.addEventListener('click', () => elements.quickFileInput.click());
-    elements.quickFileInput.addEventListener('change', handleQuickFileSelect);
-    elements.quickFormatBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            setQuickFormat(btn.dataset.format);
-        });
-    });
-    elements.quickConvertBtn.addEventListener('click', startQuickConversion);
-    
-    // 新增批量转换相关事件
-    elements.batchUploadBtn.addEventListener('click', () => elements.batchFileInput.click());
-    elements.batchFileInput.addEventListener('change', handleBatchFilesSelect);
-    elements.batchDropArea.addEventListener('dragover', handleBatchDragOver);
-    elements.batchDropArea.addEventListener('dragleave', handleBatchDragLeave);
-    elements.batchDropArea.addEventListener('drop', handleBatchFileDrop);
-    elements.addMoreFilesBtn.addEventListener('click', () => elements.batchFileInput.click());
-    elements.clearBatchBtn.addEventListener('click', clearBatchFiles);
-    elements.batchConvertBtn.addEventListener('click', startBatchConversion);
-    
-    // PDF转换相关事件
-    if (elements.pdfUploadBtn) {
-        elements.pdfUploadBtn.addEventListener('click', () => elements.pdfFileInput.click());
         elements.pdfFileInput.addEventListener('change', handlePdfFileSelect);
+    }
+    
+    if (elements.pdfDropArea) {
         elements.pdfDropArea.addEventListener('dragover', handlePdfDragOver);
         elements.pdfDropArea.addEventListener('dragleave', handlePdfDragLeave);
         elements.pdfDropArea.addEventListener('drop', handlePdfFileDrop);
+    }
+    
+    if (elements.pdfFetchUrl) {
         elements.pdfFetchUrl.addEventListener('click', handlePdfUrlFetch);
+    }
+    
+    if (elements.pdfConvertBtn) {
         elements.pdfConvertBtn.addEventListener('click', startPdfConversion);
+    }
+    
+    if (elements.pdfCancelBtn) {
         elements.pdfCancelBtn.addEventListener('click', cancelPdfConversion);
+    }
+    
+    if (elements.pdfDownloadBtn) {
         elements.pdfDownloadBtn.addEventListener('click', downloadPdfConvertedFile);
-        elements.pdfShareBtn.addEventListener('click', sharePdfConvertedFile);
-        
-        // 格式选择
-        elements.pdfFormatItems.forEach(item => {
-            item.addEventListener('click', () => {
-                selectPdfFormat(item.dataset.format);
-            });
-        });
-        
-        // 转换类型切换
-        elements.conversionTypes.forEach(item => {
-            item.addEventListener('click', () => {
+    }
+    
+    if (elements.conversionTypes) {
+        elements.conversionTypes.forEach(function(item) {
+            item.addEventListener('click', function() {
                 switchConversionType(item.dataset.conversion);
             });
         });
     }
     
-    // 文档转换相关事件
-    if (elements.documentUploadBtn) {
-        elements.documentUploadBtn.addEventListener('click', () => elements.documentFileInput.click());
-        elements.documentFileInput.addEventListener('change', handleDocumentFileSelect);
-        elements.documentDropArea.addEventListener('dragover', handleDocumentDragOver);
-        elements.documentDropArea.addEventListener('dragleave', handleDocumentDragLeave);
-        elements.documentDropArea.addEventListener('drop', handleDocumentFileDrop);
-        elements.documentFetchUrl.addEventListener('click', handleDocumentUrlFetch);
-        elements.documentConvertBtn.addEventListener('click', startDocumentConversion);
-        elements.documentCancelBtn.addEventListener('click', cancelDocumentConversion);
+    if (elements.pdfFormatItems) {
+        elements.pdfFormatItems.forEach(function(item) {
+            item.addEventListener('click', function() {
+                selectPdfFormat(item.dataset.format);
+            });
+        });
+    }
+}
+
+// PDF文件选择处理
+function handlePdfFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        processPdfFile(file);
+    }
+}
+
+// PDF拖放相关函数
+function handlePdfDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.pdfDropArea.classList.add('drag-over');
+}
+
+function handlePdfDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.pdfDropArea.classList.remove('drag-over');
+}
+
+function handlePdfFileDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.pdfDropArea.classList.remove('drag-over');
+    
+    const file = event.dataTransfer.files[0];
+    if (file) {
+        processPdfFile(file);
+    } else {
+        showError('请上传有效的文件');
+    }
+}
+
+// PDF URL获取
+function handlePdfUrlFetch() {
+    if (!elements.pdfUrlInput) return;
+    
+    const url = elements.pdfUrlInput.value.trim();
+    if (!url) {
+        showError('请输入有效的文件URL');
+        return;
+    }
+    
+    // 更新状态
+    if (elements.pdfStatusMessage) {
+        elements.pdfStatusMessage.textContent = '正在获取URL文件...';
+    }
+    
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const filename = url.split('/').pop() || 'file';
+            const file = new File([blob], filename, {
+                type: blob.type
+            });
+            
+            processPdfFile(file);
+        })
+        .catch(error => {
+            showError('无法获取文件: ' + error.message);
+            if (elements.pdfStatusMessage) {
+                elements.pdfStatusMessage.textContent = '准备就绪';
+            }
+        });
+}
+
+// 处理PDF文件
+function processPdfFile(file) {
+    // 检查文件大小
+    if (file.size > 100 * 1024 * 1024) { // 100MB
+        showError('文件大小超过限制');
+        return;
+    }
+    
+    // 存储文件引用
+    appState.pdfFile = file;
+    
+    // 更新UI状态
+    if (elements.pdfConvertBtn) {
+        elements.pdfConvertBtn.disabled = false;
+    }
+    
+    // 更新文件信息显示
+    if (elements.pdfDropArea) {
+        const dropMessage = elements.pdfDropArea.querySelector('.drop-message p');
+        if (dropMessage) {
+            dropMessage.textContent = `已选择: ${file.name} (${formatFileSize(file.size)})`;
+        }
+    }
+    
+    // 自动检测文件类型并选择相应的格式
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    
+    // 根据文件类型切换转换方向
+    if (fileExt === 'pdf') {
+        switchConversionType('from-pdf');
+    } else {
+        switchConversionType('to-pdf');
+    }
+    
+    // 自动选择格式
+    autoSelectPdfFormat(fileExt);
+    
+    // 尝试预览文件
+    previewPdfFile(file);
+}
+
+// 预览PDF文件
+function previewPdfFile(file) {
+    // 创建预览容器（如果尚不存在）
+    let previewContainer = document.querySelector('.file-preview-container');
+    
+    if (!previewContainer) {
+        previewContainer = document.createElement('div');
+        previewContainer.className = 'file-preview-container';
+        
+        // 将预览容器插入到PDF拖放区域之后
+        if (elements.pdfDropArea && elements.pdfDropArea.parentNode) {
+            elements.pdfDropArea.parentNode.insertBefore(previewContainer, elements.pdfDropArea.nextSibling);
+        }
+    }
+    
+    // 显示加载状态
+    previewContainer.innerHTML = `
+        <div class="preview-loading">
+            <span class="material-icons">hourglass_top</span>
+            <p>正在生成预览...</p>
+        </div>
+    `;
+    
+    // 处理不同类型的文件预览
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    
+    // 图像类型文件可以直接预览
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileExt)) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(img);
+            };
+            img.onerror = function() {
+                showPreviewError(previewContainer, '无法加载图像预览');
+            };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() {
+            showPreviewError(previewContainer, '无法读取文件');
+        };
+        reader.readAsDataURL(file);
+    }
+    // PDF文件使用PDF.js预览
+    else if (fileExt === 'pdf') {
+        // 检查PDF.js是否已加载
+        if (typeof pdfjsLib === 'undefined') {
+            // PDF.js未加载，显示文档图标
+            showDocumentIcon(previewContainer, 'pdf');
+            return;
+        }
+        
+        const fileReader = new FileReader();
+        fileReader.onload = function() {
+            const typedarray = new Uint8Array(this.result);
+            
+            // 使用PDF.js加载PDF
+            pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                // 获取第一页
+                return pdf.getPage(1);
+            }).then(function(page) {
+                // 准备canvas
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                // PDF页面的原始尺寸
+                const viewport = page.getViewport({ scale: 1.0 });
+                
+                // 计算适当的缩放比例，使预览适合容器
+                const containerMaxWidth = 400; // 预览容器最大宽度
+                const containerMaxHeight = 200; // 预览容器最大高度
+                const scale = Math.min(
+                    containerMaxWidth / viewport.width,
+                    containerMaxHeight / viewport.height
+                );
+                
+                // 使用计算出的缩放比例设置canvas尺寸
+                const scaledViewport = page.getViewport({ scale: scale });
+                canvas.width = scaledViewport.width;
+                canvas.height = scaledViewport.height;
+                
+                // 渲染PDF页面到canvas
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: scaledViewport
+                };
+                
+                const renderTask = page.render(renderContext);
+                renderTask.promise.then(function() {
+                    previewContainer.innerHTML = '';
+                    previewContainer.appendChild(canvas);
+                }).catch(function(error) {
+                    console.error('渲染PDF页面失败:', error);
+                    showPreviewError(previewContainer, '无法预览PDF');
+                });
+            }).catch(function(error) {
+                console.error('加载PDF失败:', error);
+                showPreviewError(previewContainer, '无法加载PDF');
+            });
+        };
+        fileReader.onerror = function() {
+            showPreviewError(previewContainer, '无法读取文件');
+        };
+        fileReader.readAsArrayBuffer(file);
+    }
+    // 文档类型使用图标表示
+    else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'rtf', 'odt', 'ods', 'odp', 'csv', 'xml', 'html', 'htm'].includes(fileExt)) {
+        let docType = 'document';
+        
+        if (['doc', 'docx', 'odt', 'rtf'].includes(fileExt)) {
+            docType = 'doc';
+        } else if (['xls', 'xlsx', 'ods', 'csv'].includes(fileExt)) {
+            docType = 'xls';
+        } else if (['ppt', 'pptx', 'odp'].includes(fileExt)) {
+            docType = 'ppt';
+        } else if (['txt', 'xml', 'html', 'htm'].includes(fileExt)) {
+            docType = 'txt';
+        }
+        
+        showDocumentIcon(previewContainer, docType);
+    }
+    // 其他类型文件，显示通用图标
+    else {
+        showDocumentIcon(previewContainer, 'unknown');
+    }
+}
+
+// 显示文档图标预览
+function showDocumentIcon(container, docType) {
+    let iconName = 'description';
+    let docTypeName = '文档';
+    
+    switch (docType) {
+        case 'pdf':
+            iconName = 'picture_as_pdf';
+            docTypeName = 'PDF文档';
+            break;
+        case 'doc':
+            iconName = 'description';
+            docTypeName = 'Word文档';
+            break;
+        case 'xls':
+            iconName = 'table_chart';
+            docTypeName = 'Excel表格';
+            break;
+        case 'ppt':
+            iconName = 'slideshow';
+            docTypeName = 'PowerPoint演示文稿';
+            break;
+        case 'txt':
+            iconName = 'text_snippet';
+            docTypeName = '文本文档';
+            break;
+        case 'unknown':
+        default:
+            iconName = 'insert_drive_file';
+            docTypeName = '文件';
+    }
+    
+    container.innerHTML = `
+        <div class="document-preview">
+            <span class="material-icons document-icon">${iconName}</span>
+            <p>${docTypeName}</p>
+        </div>
+    `;
+}
+
+// 显示预览错误
+function showPreviewError(container, message) {
+    container.innerHTML = `
+        <div class="preview-error">
+            <span class="material-icons">error_outline</span>
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+// 自动选择PDF格式
+function autoSelectPdfFormat(fileExt) {
+    let format = 'auto';
+    
+    if (appState.pdfConversionType === 'to-pdf') {
+        // 文档类型
+        if (['doc', 'docx', 'rtf', 'odt'].includes(fileExt)) {
+            format = 'doc';
+        }
+        // 表格类型
+        else if (['xls', 'xlsx', 'csv', 'ods'].includes(fileExt)) {
+            format = 'xls';
+        }
+        // 演示文稿类型
+        else if (['ppt', 'pptx', 'odp'].includes(fileExt)) {
+            format = 'ppt';
+        }
+        // 图像类型
+        else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'tiff', 'tif', 'bmp', 'psd', 'pnm'].includes(fileExt)) {
+            format = 'image';
+        }
+        // 网页类型
+        else if (['html', 'htm', 'xml'].includes(fileExt)) {
+            format = 'html';
+        }
+        // 文本类型
+        else if (['txt', 'text', 'md', 'markdown'].includes(fileExt)) {
+            format = 'txt';
+        }
+        // 特殊类型
+        else if (fileExt === 'swf') {
+            format = 'swf';
+        }
+    } else {
+        // 从PDF转换，根据选择的格式设置
+        const fromPdfFormats = {
+            'docx': ['docx', 'doc', 'rtf', 'odt'],
+            'xlsx': ['xlsx', 'xls', 'csv', 'ods'],
+            'pptx': ['pptx', 'ppt', 'odp'],
+            'jpg': ['jpg', 'jpeg'],
+            'png': ['png'],
+            'tiff': ['tiff', 'tif'],
+            'bmp': ['bmp'],
+            'html': ['html', 'htm'],
+            'txt': ['txt'],
+            'rtf': ['rtf']
+        };
+        
+        // 查找格式类别
+        for (const [targetFormat, extensions] of Object.entries(fromPdfFormats)) {
+            if (extensions.includes(fileExt)) {
+                format = targetFormat;
+                break;
+            }
+        }
+        
+        // 如果没找到匹配的格式，使用默认值
+        if (format === 'auto') {
+            format = 'docx'; // 默认转为Word文档
+        }
+    }
+    
+    selectPdfFormat(format);
+}
+
+// 选择PDF格式
+function selectPdfFormat(format) {
+    if (!format) return;
+    
+    appState.pdfSelectedFormat = format;
+    
+    // 更新格式按钮状态
+    if (elements.pdfFormatItems) {
+        elements.pdfFormatItems.forEach(item => {
+            item.classList.toggle('active', item.dataset.format === format);
+        });
+    }
+}
+
+// 切换转换类型
+function switchConversionType(conversionType) {
+    if (!conversionType || conversionType === appState.pdfConversionType) return;
+    
+    appState.pdfConversionType = conversionType;
+    
+    // 更新转换类型选择器状态
+    if (elements.conversionTypes) {
+        elements.conversionTypes.forEach(item => {
+            item.classList.toggle('active', item.dataset.conversion === conversionType);
+        });
+    }
+    
+    // 切换显示相应的格式和选项
+    if (elements.toPdfFormats && elements.fromPdfFormats) {
+        elements.toPdfFormats.style.display = conversionType === 'to-pdf' ? 'block' : 'none';
+        elements.fromPdfFormats.style.display = conversionType === 'from-pdf' ? 'block' : 'none';
+    }
+    
+    if (elements.toPdfOptions && elements.fromPdfOptions) {
+        elements.toPdfOptions.style.display = conversionType === 'to-pdf' ? 'block' : 'none';
+        elements.fromPdfOptions.style.display = conversionType === 'from-pdf' ? 'block' : 'none';
+    }
+    
+    // 如果已经有文件，自动选择适当的格式
+    if (appState.pdfFile) {
+        const fileExt = appState.pdfFile.name.split('.').pop().toLowerCase();
+        autoSelectPdfFormat(fileExt);
+    }
+}
+
+// 开始PDF转换
+function startPdfConversion() {
+    if (!appState.pdfFile) return;
+    
+    appState.pdfIsConverting = true;
+    updatePdfUI();
+    
+    // 显示进度
+    if (elements.pdfStatusMessage) {
+        elements.pdfStatusMessage.textContent = '正在转换...';
+    }
+    
+    if (elements.pdfProgressPercentage) {
+        elements.pdfProgressPercentage.textContent = '0%';
+    }
+    
+    if (elements.pdfConversionProgress) {
+        const progressFill = elements.pdfConversionProgress.querySelector('.progress-fill');
+        if (progressFill) {
+            progressFill.style.width = '0%';
+        }
+    }
+    
+    // 模拟转换进度
+    simulatePdfProgress();
+}
+
+// 取消PDF转换
+function cancelPdfConversion() {
+    appState.pdfIsConverting = false;
+    
+    // 重置进度
+    if (elements.pdfConversionProgress) {
+        const progressFill = elements.pdfConversionProgress.querySelector('.progress-fill');
+        if (progressFill) {
+            progressFill.style.width = '0%';
+        }
+    }
+    
+    if (elements.pdfProgressPercentage) {
+        elements.pdfProgressPercentage.textContent = '0%';
+    }
+    
+    if (elements.pdfStatusMessage) {
+        elements.pdfStatusMessage.textContent = '准备就绪';
+    }
+    
+    updatePdfUI();
+}
+
+// 模拟PDF转换进度
+function simulatePdfProgress() {
+    let progress = 0;
+    const interval = setInterval(() => {
+        if (!appState.pdfIsConverting) {
+            clearInterval(interval);
+            return;
+        }
+        
+        progress += 5;
+        if (progress > 100) {
+            progress = 100;
+            clearInterval(interval);
+            
+            // 完成转换
+            finishPdfConversion();
+        }
+        
+        if (elements.pdfConversionProgress) {
+            const progressFill = elements.pdfConversionProgress.querySelector('.progress-fill');
+            if (progressFill) {
+                progressFill.style.width = progress + '%';
+            }
+        }
+        
+        if (elements.pdfProgressPercentage) {
+            elements.pdfProgressPercentage.textContent = progress + '%';
+        }
+    }, 100);
+}
+
+// 完成PDF转换
+function finishPdfConversion() {
+    appState.pdfIsConverting = false;
+    
+    if (elements.pdfStatusMessage) {
+        elements.pdfStatusMessage.textContent = '转换完成';
+    }
+    
+    // 生成转换结果文件
+    const fileExt = appState.pdfFile.name.split('.').pop().toLowerCase();
+    const fileName = appState.pdfFile.name.split('.')[0] || 'file';
+    let resultFilename;
+    let resultType;
+    
+    if (appState.pdfConversionType === 'to-pdf') {
+        resultFilename = `${fileName}.pdf`;
+        resultType = 'application/pdf';
+    } else {
+        const targetFormat = appState.pdfSelectedFormat;
+        resultFilename = `${fileName}.${targetFormat}`;
+        
+        // 根据目标格式设置正确的MIME类型
+        switch (targetFormat) {
+            case 'docx':
+                resultType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                break;
+            case 'xlsx':
+                resultType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                break;
+            case 'pptx':
+                resultType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+                break;
+            case 'jpg':
+                resultType = 'image/jpeg';
+                break;
+            case 'png':
+                resultType = 'image/png';
+                break;
+            case 'tiff':
+                resultType = 'image/tiff';
+                break;
+            case 'bmp':
+                resultType = 'image/bmp';
+                break;
+            case 'txt':
+                resultType = 'text/plain';
+                break;
+            case 'html':
+                resultType = 'text/html';
+                break;
+            case 'rtf':
+                resultType = 'application/rtf';
+                break;
+            case 'csv':
+                resultType = 'text/csv';
+                break;
+            case 'xml':
+                resultType = 'application/xml';
+                break;
+            case 'odt':
+                resultType = 'application/vnd.oasis.opendocument.text';
+                break;
+            case 'ods':
+                resultType = 'application/vnd.oasis.opendocument.spreadsheet';
+                break;
+            case 'odp':
+                resultType = 'application/vnd.oasis.opendocument.presentation';
+                break;
+            default:
+                resultType = 'application/octet-stream';
+        }
+    }
+    
+    // 创建模拟的转换结果
+    // 在实际应用中，这里应该是实际的文件转换结果
+    const simulatedContent = `模拟的转换结果：${appState.pdfFile.name} 转换为 ${resultFilename}`;
+    appState.pdfConvertedBlob = new Blob([simulatedContent], { type: resultType });
+    
+    // 更新结果信息
+    if (elements.pdfResultFilename) {
+        elements.pdfResultFilename.textContent = resultFilename;
+    }
+    
+    if (elements.pdfResultSize) {
+        elements.pdfResultSize.textContent = formatFileSize(appState.pdfConvertedBlob.size);
+    }
+    
+    if (elements.pdfResultDate) {
+        elements.pdfResultDate.textContent = '刚刚完成';
+    }
+    
+    // 设置正确的文件类型图标
+    const resultFileIcon = document.querySelector('.result-file-icon');
+    if (resultFileIcon) {
+        let iconType = 'pdf';
+        
+        if (resultFilename.endsWith('.docx') || resultFilename.endsWith('.doc') || 
+            resultFilename.endsWith('.rtf') || resultFilename.endsWith('.odt')) {
+            iconType = 'doc';
+        } else if (resultFilename.endsWith('.xlsx') || resultFilename.endsWith('.xls') || 
+                  resultFilename.endsWith('.csv') || resultFilename.endsWith('.ods')) {
+            iconType = 'xls';
+        } else if (resultFilename.endsWith('.pptx') || resultFilename.endsWith('.ppt') || 
+                  resultFilename.endsWith('.odp')) {
+            iconType = 'ppt';
+        } else if (resultFilename.endsWith('.jpg') || resultFilename.endsWith('.jpeg') || 
+                  resultFilename.endsWith('.png') || resultFilename.endsWith('.gif') || 
+                  resultFilename.endsWith('.bmp') || resultFilename.endsWith('.tiff') || 
+                  resultFilename.endsWith('.tif') || resultFilename.endsWith('.webp')) {
+            iconType = 'img';
+        }
+        
+        resultFileIcon.setAttribute('data-type', iconType);
+    }
+    
+    // 显示结果区域并添加动画效果
+    if (elements.pdfResultSection) {
+        elements.pdfResultSection.style.display = 'block';
+        
+        // 添加完成动画效果
+        const resultFile = document.querySelector('.result-file');
+        if (resultFile) {
+            resultFile.classList.add('conversion-complete');
+            // 动画结束后移除类名
+            setTimeout(() => {
+                resultFile.classList.remove('conversion-complete');
+            }, 500);
+        }
+    }
+    
+    // 设置云存储和分享按钮事件
+    if (elements.pdfShareBtn) {
+        elements.pdfShareBtn.onclick = showQRCode;
+    }
+    
+    if (elements.pdfCloudBtn) {
+        elements.pdfCloudBtn.onclick = showCloudOptions;
+    }
+    
+    // 添加到历史记录
+    try {
+        saveToHistory(appState.pdfFile, resultFilename.split('.').pop(), appState.pdfConvertedBlob);
+    } catch (error) {
+        console.error('保存到历史记录失败:', error);
+    }
+    
+    updatePdfUI();
+    
+    // 显示成功消息
+    showMessage('转换成功！', 'success');
+}
+
+// 显示文件QR码
+function showQRCode() {
+    if (!appState.pdfConvertedBlob) return;
+    
+    // 创建QR码弹窗
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    
+    // 在实际应用中，这里需要一个临时URL或ID来引用此文件
+    // 此处仅为演示，使用模拟的URL
+    const demoUrl = `https://example.com/share/${Date.now()}`;
+    
+    // QR码图像 (此处使用在线QR码生成服务)
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(demoUrl)}`;
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>扫描二维码</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center;">
+                    <img src="${qrImageUrl}" alt="二维码" style="max-width: 200px;">
+                    <p style="margin-top: 1rem;">扫描二维码下载或分享文件</p>
+                    <p class="file-link" style="word-break: break-all; font-size: 0.8rem; color: var(--text-color-light); margin-top: 0.5rem;">${demoUrl}</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary-btn" id="copy-link-btn">复制链接</button>
+                <button class="primary-btn" id="close-qr-btn">关闭</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 绑定事件
+    const closeBtn = modal.querySelector('.modal-close');
+    const copyLinkBtn = modal.querySelector('#copy-link-btn');
+    const closeQrBtn = modal.querySelector('#close-qr-btn');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+    }
+    
+    if (copyLinkBtn) {
+        copyLinkBtn.addEventListener('click', () => {
+            const tempInput = document.createElement('input');
+            tempInput.value = demoUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            showMessage('链接已复制到剪贴板', 'info');
+        });
+    }
+    
+    if (closeQrBtn) {
+        closeQrBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+    }
+}
+
+// 显示云存储选项
+function showCloudOptions() {
+    if (!appState.pdfConvertedBlob) return;
+    
+    // 创建云存储选项弹窗
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>保存到云存储</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="cloud-options">
+                    <div class="cloud-option" data-cloud="google">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" alt="Google Drive" style="width: 50px; height: 50px;">
+                        <span>Google Drive</span>
+                    </div>
+                    <div class="cloud-option" data-cloud="dropbox">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/74/Dropbox_logo.svg" alt="Dropbox" style="width: 50px; height: 50px;">
+                        <span>Dropbox</span>
+                    </div>
+                    <div class="cloud-option" data-cloud="onedrive">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Microsoft_Office_OneDrive_%282019%E2%80%93present%29.svg" alt="OneDrive" style="width: 50px; height: 50px;">
+                        <span>OneDrive</span>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; text-align: center; color: var(--text-color-light);">
+                    选择一个云存储服务，保存您的文件
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="primary-btn" id="close-cloud-btn">取消</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 添加样式
+    const style = document.createElement('style');
+    style.textContent = `
+        .cloud-options {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1rem;
+        }
+        
+        .cloud-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .cloud-option:hover {
+            background-color: var(--background-color-light);
+            transform: translateY(-2px);
+        }
+        
+        .cloud-option span {
+            margin-top: 0.5rem;
+        }
+    `;
+    
+    document.head.appendChild(style);
+    
+    // 绑定事件
+    const closeBtn = modal.querySelector('.modal-close');
+    const closeCloudBtn = modal.querySelector('#close-cloud-btn');
+    const cloudOptions = modal.querySelectorAll('.cloud-option');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.head.removeChild(style);
+        });
+    }
+    
+    if (closeCloudBtn) {
+        closeCloudBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            document.head.removeChild(style);
+        });
+    }
+    
+    if (cloudOptions) {
+        cloudOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const cloudService = option.getAttribute('data-cloud');
+                // 在实际应用中，这里应该实现真正的云存储集成
+                // 此处仅为演示
+                showMessage(`将文件保存到 ${cloudService} 的功能即将上线`, 'info');
+                document.body.removeChild(modal);
+                document.head.removeChild(style);
+            });
+        });
+    }
+}
+
+// 显示消息提示
+function showMessage(message, type = 'info') {
+    // 检查是否已有消息提示，有则移除
+    const existingToast = document.querySelector('.message-toast');
+    if (existingToast) {
+        document.body.removeChild(existingToast);
+    }
+    
+    // 创建新的消息提示
+    const toast = document.createElement('div');
+    toast.className = 'message-toast';
+    
+    // 根据消息类型设置图标
+    let icon;
+    switch (type) {
+        case 'success':
+            icon = 'check_circle';
+            break;
+        case 'error':
+            icon = 'error';
+            break;
+        case 'warning':
+            icon = 'warning';
+            break;
+        case 'info':
+        default:
+            icon = 'info';
+    }
+    
+    toast.innerHTML = `
+        <div class="message-content">
+            <span class="material-icons">${icon}</span>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // 延迟添加show类，以便显示过渡动画
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // 设置自动消失定时器
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// 下载转换后的PDF文件
+function downloadPdfConvertedFile() {
+    if (!appState.pdfConvertedBlob) return;
+    
+    const filename = elements.pdfResultFilename?.textContent || 'converted.pdf';
+    
+    // 创建下载链接
+    const url = URL.createObjectURL(appState.pdfConvertedBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    
+    // 触发下载
+    document.body.appendChild(a);
+    a.click();
+    
+    // 清理
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
+
+// 更新PDF界面状态
+function updatePdfUI() {
+    // 更新转换按钮状态
+    if (elements.pdfConvertBtn) {
+        elements.pdfConvertBtn.disabled = !appState.pdfFile || appState.pdfIsConverting;
+    }
+    
+    // 更新取消按钮状态
+    if (elements.pdfCancelBtn) {
+        elements.pdfCancelBtn.disabled = !appState.pdfIsConverting;
+    }
+}
+
+// 绑定事件监听器
+function bindEventListeners() {
+    // 左侧导航标签切换
+    if (elements.sidebarNavItems) {
+        elements.sidebarNavItems.forEach(item => {
+            item.addEventListener('click', function() {
+                switchMainTab(item.dataset.tab);
+            });
+        });
+    }
+    
+    // 图像转换相关 ----------------------------------------
+    
+    // 文件上传区
+    if (elements.fileInput && elements.uploadBtn) {
+        elements.uploadBtn.addEventListener('click', function() {
+            elements.fileInput.click();
+        });
+        
+        elements.fileInput.addEventListener('change', handleFileSelect);
+    }
+    
+    // 拖放区域
+    if (elements.dropArea) {
+        elements.dropArea.addEventListener('dragover', handleDragOver);
+        elements.dropArea.addEventListener('dragleave', handleDragLeave);
+        elements.dropArea.addEventListener('drop', handleFileDrop);
+    }
+    
+    // 快速上传
+    if (elements.quickUploadBtn && elements.quickFileInput) {
+        elements.quickUploadBtn.addEventListener('click', function() {
+            elements.quickFileInput.click();
+        });
+        
+        elements.quickFileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                appState.quickFile = file;
+                elements.quickFileName.textContent = file.name;
+            }
+        });
+    }
+    
+    // 格式选择按钮
+    if (elements.formatBtns) {
+        elements.formatBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                setFormat(this.dataset.format);
+            });
+        });
+    }
+    
+    // 质量滑块
+    if (elements.qualitySlider) {
+        elements.qualitySlider.addEventListener('input', handleQualityChange);
+    }
+    
+    // 宽度输入
+    if (elements.widthInput) {
+        elements.widthInput.addEventListener('change', handleWidthChange);
+    }
+    
+    // 高度输入
+    if (elements.heightInput) {
+        elements.heightInput.addEventListener('change', handleHeightChange);
+    }
+    
+    // 锁定比例
+    if (elements.ratioLock) {
+        elements.ratioLock.addEventListener('click', toggleRatioLock);
+    }
+    
+    // 预览控制
+    if (elements.zoomIn) {
+        elements.zoomIn.addEventListener('click', zoomIn);
+    }
+    
+    if (elements.zoomOut) {
+        elements.zoomOut.addEventListener('click', zoomOut);
+    }
+    
+    if (elements.toggleSplit) {
+        elements.toggleSplit.addEventListener('click', toggleSplitView);
+    }
+    
+    // 操作按钮
+    if (elements.convertBtn) {
+        elements.convertBtn.addEventListener('click', startConversion);
+    }
+    
+    if (elements.cancelBtn) {
+        elements.cancelBtn.addEventListener('click', cancelConversion);
+    }
+    
+    if (elements.downloadBtn) {
+        elements.downloadBtn.addEventListener('click', downloadConvertedImage);
+    }
+    
+    // 输入标签切换
+    if (elements.inputTabBtns) {
+        elements.inputTabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                switchTab(this.dataset.tab);
+            });
+        });
+    }
+    
+    // 错误提示关闭
+    if (elements.closeError) {
+        elements.closeError.addEventListener('click', hideError);
+    }
+    
+    // 模态框关闭
+    if (elements.modalClose) {
+        elements.modalClose.addEventListener('click', hideModal);
+    }
+    
+    // 从模态框下载
+    if (elements.modalDownloadBtn) {
+        elements.modalDownloadBtn.addEventListener('click', function() {
+            downloadConvertedImage();
+            hideModal();
+        });
+    }
+    
+    // 文件压缩相关 ----------------------------------------
+    
+    // 文件上传区
+    if (elements.compressFileInput && elements.compressDropArea) {
+        // 上传按钮点击
+        const compressUploadBtn = elements.compressDropArea.querySelector('.upload-btn');
+        if (compressUploadBtn) {
+            compressUploadBtn.addEventListener('click', function() {
+                elements.compressFileInput.click();
+            });
+        }
+        
+        // 文件选择事件
+        elements.compressFileInput.addEventListener('change', handleCompressFileSelect);
+        
+        // 拖放事件
+        elements.compressDropArea.addEventListener('dragover', handleCompressDragOver);
+        elements.compressDropArea.addEventListener('dragleave', handleCompressDragLeave);
+        elements.compressDropArea.addEventListener('drop', handleCompressFileDrop);
+    }
+    
+    // 批量压缩上传区
+    if (elements.batchCompressFileInput && elements.batchCompressDropArea) {
+        // 上传按钮点击
+        const batchUploadBtn = elements.batchCompressDropArea.querySelector('.batch-upload-btn');
+        if (batchUploadBtn) {
+            batchUploadBtn.addEventListener('click', function() {
+                elements.batchCompressFileInput.click();
+            });
+        }
+        
+        // 文件选择事件
+        elements.batchCompressFileInput.addEventListener('change', handleBatchCompressFileSelect);
+        
+        // 拖放事件
+        elements.batchCompressDropArea.addEventListener('dragover', handleBatchCompressDragOver);
+        elements.batchCompressDropArea.addEventListener('dragleave', handleBatchCompressDragLeave);
+        elements.batchCompressDropArea.addEventListener('drop', handleBatchCompressFileDrop);
+    }
+    
+    // 压缩格式选择
+    if (elements.compressFormatBtns) {
+        elements.compressFormatBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                setCompressFormat(this.dataset.format);
+            });
+        });
+    }
+    
+    // 压缩级别滑块
+    if (elements.compressLevelSlider) {
+        elements.compressLevelSlider.addEventListener('input', handleCompressLevelChange);
+    }
+    
+    // 压缩操作按钮
+    if (elements.compressStartBtn) {
+        elements.compressStartBtn.addEventListener('click', startCompression);
+    }
+    
+    if (elements.compressCancelBtn) {
+        elements.compressCancelBtn.addEventListener('click', cancelCompression);
+    }
+    
+    if (elements.compressDownloadBtn) {
+        elements.compressDownloadBtn.addEventListener('click', downloadCompressedFile);
+    }
+    
+    // 批量压缩控制
+    if (elements.addMoreCompressFiles) {
+        elements.addMoreCompressFiles.addEventListener('click', function() {
+            elements.batchCompressFileInput.click();
+        });
+    }
+    
+    if (elements.clearBatchCompress) {
+        elements.clearBatchCompress.addEventListener('click', clearBatchCompressFiles);
+    }
+    
+    if (elements.batchCompressStart) {
+        elements.batchCompressStart.addEventListener('click', function() {
+            // 此处可以实现批量压缩的逻辑
+            alert('批量压缩功能尚在开发中');
+        });
+    }
+    
+    // 压缩标签页切换
+    if (elements.compressTabBtns) {
+        elements.compressTabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 清除所有标签和内容的active状态
+                elements.compressTabBtns.forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('#compress-tab .tab-content').forEach(content => content.classList.remove('active'));
+                
+                // 设置当前标签和内容为active
+                this.classList.add('active');
+                const tabId = this.dataset.tab + '-tab';
+                const tabContent = document.getElementById(tabId);
+                if (tabContent) {
+                    tabContent.classList.add('active');
+                }
+            });
+        });
     }
 }
 
@@ -962,34 +2125,100 @@ function convertToSVG(canvas, imgElement) {
     }
 }
 
-// 切换主标签页
+// 主标签页切换
 function switchMainTab(tabId) {
     if (!tabId || tabId === appState.currentMainTab) return;
     
     appState.currentMainTab = tabId;
     
     // 更新导航项选中状态
-    elements.mainNavItems.forEach(item => {
-        item.classList.toggle('active', item.dataset.tab === tabId);
-    });
+    if (elements.sidebarNavItems) {
+        elements.sidebarNavItems.forEach(item => {
+            item.classList.toggle('active', item.dataset.tab === tabId);
+        });
+    }
     
     // 隐藏所有标签页内容
-    elements.converterTab.style.display = 'none';
-    elements.historyTab.style.display = 'none';
-    elements.helpTab.style.display = 'none';
+    if (elements.appContainers) {
+        elements.appContainers.forEach(container => {
+            container.style.display = 'none';
+        });
+    }
     
     // 显示选中的标签页
-    switch (tabId) {
-        case 'converter':
-            elements.converterTab.style.display = 'grid';
-            break;
-        case 'history':
-            elements.historyTab.style.display = 'block';
+    const selectedTab = document.getElementById(tabId + '-tab');
+    if (selectedTab) {
+        selectedTab.style.display = 'grid';
+        
+        // 如果是历史标签，加载历史记录
+        if (tabId === 'history') {
             loadHistoryFromStorage();
-            break;
-        case 'help':
-            elements.helpTab.style.display = 'block';
-            break;
+        }
+    } else {
+        console.warn(`标签页 "${tabId}" 不存在`);
+    }
+    
+    // 在移动设备上，点击导航后关闭侧边栏
+    if (window.innerWidth < 768) {
+        document.body.classList.add('sidebar-collapsed');
+        appState.isMobileMenuOpen = false;
+    }
+}
+
+// 应用各标签页的特定颜色主题
+function applyTabColorThemes() {
+    // 为每个标签页设置相应的颜色变量
+    const colorThemes = {
+        'image': {
+            color: 'var(--image-color)',
+            bgColor: 'rgba(42, 92, 170, 0.1)'
+        },
+        'pdf': {
+            color: 'var(--pdf-color)',
+            bgColor: 'rgba(231, 76, 60, 0.1)'
+        },
+        'document': {
+            color: 'var(--document-color)',
+            bgColor: 'rgba(39, 174, 96, 0.1)'
+        },
+        'video': {
+            color: 'var(--video-color)',
+            bgColor: 'rgba(142, 68, 173, 0.1)'
+        },
+        'compress': {
+            color: 'var(--compress-color)',
+            bgColor: 'rgba(243, 156, 18, 0.1)'
+        },
+        'history': {
+            color: 'var(--history-color)',
+            bgColor: 'rgba(22, 160, 133, 0.1)'
+        },
+        'help': {
+            color: 'var(--help-color)',
+            bgColor: 'rgba(44, 62, 80, 0.1)'
+        }
+    };
+    
+    // 将颜色应用到各个标签页
+    for (const [tabName, theme] of Object.entries(colorThemes)) {
+        const tabElement = document.getElementById(`${tabName}-tab`);
+        if (tabElement) {
+            // 设置标签页中的主要交互元素颜色
+            const tabButtons = tabElement.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('mouseover', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.color = theme.color;
+                    }
+                });
+                
+                btn.addEventListener('mouseout', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.color = '';
+                    }
+                });
+            });
+        }
     }
 }
 
