@@ -270,12 +270,29 @@ function initApp() {
 // 检查响应式布局
 function checkResponsiveLayout() {
     const isMobile = window.innerWidth < 768;
-    document.body.classList.toggle('mobile-view', isMobile);
+    const isTablet = window.innerWidth >= 768 && window.innerWidth < 992;
     
-    // 如果是移动设备，默认隐藏侧边栏
-    if (isMobile && !document.body.classList.contains('sidebar-open')) {
+    // 添加移动端和平板相关的类
+    document.body.classList.toggle('mobile-view', isMobile);
+    document.body.classList.toggle('tablet-view', isTablet);
+    
+    // 如果是移动设备或平板，默认隐藏侧边栏
+    if ((isMobile || isTablet) && !document.body.classList.contains('sidebar-open')) {
+        document.body.classList.remove('sidebar-collapsed');
+    } else if (!isMobile && !isTablet) {
+        // 如果是桌面设备，默认显示侧边栏
         document.body.classList.add('sidebar-collapsed');
     }
+    
+    // 调整预览区域的显示方式
+    const previewContainers = document.querySelectorAll('.preview-container');
+    previewContainers.forEach(container => {
+        if (isMobile) {
+            container.classList.remove('split-view');
+        } else {
+            container.classList.add('split-view');
+        }
+    });
 }
 
 // 加载PDF.js库
@@ -1279,13 +1296,6 @@ function bindEventListeners() {
 
 // 绑定响应式布局事件
 function bindResponsiveEvents() {
-    // 汉堡菜单点击事件
-    if (elements.hamburgerMenu) {
-        elements.hamburgerMenu.addEventListener('click', function() {
-            document.body.classList.toggle('sidebar-collapsed');
-        });
-    }
-    
     // 窗口大小变化事件
     window.addEventListener('resize', function() {
         // 如果窗口宽度小于768px，自动折叠侧边栏
@@ -1295,6 +1305,34 @@ function bindResponsiveEvents() {
             document.body.classList.remove('sidebar-collapsed');
         }
     });
+    
+    // 侧边栏切换按钮点击事件
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            document.body.classList.toggle('sidebar-collapsed');
+        });
+    }
+    
+    // 侧边栏蒙层点击事件
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+            document.body.classList.remove('sidebar-collapsed');
+        });
+    }
+    
+    // 点击侧边栏导航项时在移动设备上自动关闭侧边栏
+    document.querySelectorAll('.sidebar-nav li').forEach(item => {
+        item.addEventListener('click', function() {
+            if (window.innerWidth < 992) {
+                document.body.classList.remove('sidebar-collapsed');
+            }
+        });
+    });
+    
+    // 初始检查窗口大小
+    checkResponsiveLayout();
 }
 
 // 处理文件选择
