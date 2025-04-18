@@ -816,6 +816,185 @@
                 </div>
             </section>
         </main>
+
+        <!-- 历史记录部分 -->
+        <main class="app-container" id="history-tab" style="display: none;">
+            <section class="history-section">
+                <div class="history-header">
+                    <h3>转换历史记录</h3>
+                    <p>查看和管理您的转换历史</p>
+                </div>
+                
+                <div class="history-controls">
+                    <div class="history-search">
+                        <input type="text" id="history-search-input" placeholder="搜索文件名或格式...">
+                        <button id="history-search-btn" class="primary-btn"><span class="material-icons">search</span></button>
+                    </div>
+                    <button id="clear-all-history" class="secondary-btn"><span class="material-icons">delete_sweep</span>清除全部</button>
+                </div>
+                
+                <div id="empty-history" class="empty-history">
+                    <div class="empty-icon">
+                        <span class="material-icons">history</span>
+                    </div>
+                    <p>暂无历史记录</p>
+                    <p class="empty-subtext">当您转换文件后，记录将显示在这里</p>
+                </div>
+                
+                <div id="history-list" class="history-list">
+                    <!-- 历史记录项将通过JavaScript动态添加 -->
+                </div>
+                
+                <div class="history-pagination">
+                    <!-- 分页控件将通过JavaScript动态添加 -->
+                </div>
+            </section>
+        </main>
+        
+        <!-- 使用帮助部分 -->
+        <main class="app-container" id="help-tab" style="display: none;">
+            <section class="help-section">
+                <div class="help-header">
+                    <h2>使用帮助中心</h2>
+                    <p>了解如何使用ConvertMan免费转换工具的各项功能</p>
+                </div>
+                
+                <div class="help-content">
+                    <!-- 图像转换帮助卡片 -->
+                    <div class="help-card">
+                        <div class="help-card-header" style="background-color: var(--image-color);">
+                            <span class="material-icons">image</span>
+                            <h3>图像转换</h3>
+                        </div>
+                        <div class="help-card-content">
+                            <p>ConvertMan支持多种图像格式的互相转换，包括JPG、PNG、WEBP、GIF、SVG等。</p>
+                            <p>使用步骤：</p>
+                            <ol>
+                                <li>选择"图像转换"标签页</li>
+                                <li>上传图像文件（支持拖放操作）</li>
+                                <li>选择需要转换的目标格式</li>
+                                <li>调整质量、尺寸等参数（可选）</li>
+                                <li>点击"开始转换"</li>
+                                <li>转换完成后下载文件</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <!-- PDF转换帮助卡片 -->
+                    <div class="help-card">
+                        <div class="help-card-header" style="background-color: var(--pdf-color);">
+                            <span class="material-icons">picture_as_pdf</span>
+                            <h3>PDF转换</h3>
+                        </div>
+                        <div class="help-card-content">
+                            <p>PDF转换支持将文档转为PDF或将PDF转为其他格式。</p>
+                            <p>功能特点：</p>
+                            <ul>
+                                <li>支持将各种文档转为PDF（DOC, DOCX, XLS, PPT等）</li>
+                                <li>支持将PDF转为Word、图片或其他格式</li>
+                                <li>提供高质量PDF转换效果</li>
+                                <li>可设置页面大小、方向等参数</li>
+                            </ul>
+                            <p>最适合用于办公文档、学术论文和电子表格的处理。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 文档转换帮助卡片 -->
+                    <div class="help-card">
+                        <div class="help-card-header" style="background-color: var(--document-color);">
+                            <span class="material-icons">description</span>
+                            <h3>文档转换</h3>
+                        </div>
+                        <div class="help-card-content">
+                            <p>文档转换支持各种办公文档格式之间的互相转换。</p>
+                            <p>支持的格式：</p>
+                            <table class="format-tips">
+                                <tr>
+                                    <th>文档类型</th>
+                                    <th>支持格式</th>
+                                </tr>
+                                <tr>
+                                    <td>文本文档</td>
+                                    <td>DOCX, DOC, RTF, TXT, ODT</td>
+                                </tr>
+                                <tr>
+                                    <td>电子表格</td>
+                                    <td>XLSX, XLS, CSV, ODS</td>
+                                </tr>
+                                <tr>
+                                    <td>演示文稿</td>
+                                    <td>PPTX, PPT, ODP</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- 文件压缩帮助卡片 -->
+                    <div class="help-card">
+                        <div class="help-card-header" style="background-color: var(--compress-color);">
+                            <span class="material-icons">compress</span>
+                            <h3>文件压缩</h3>
+                        </div>
+                        <div class="help-card-content">
+                            <p>文件压缩功能支持创建各种格式的压缩文件以及解压已有压缩包。</p>
+                            <p>主要功能：</p>
+                            <ul>
+                                <li>支持ZIP、7Z、TAR、GZ等格式</li>
+                                <li>可设置压缩级别（快速/平衡/最小体积）</li>
+                                <li>支持添加密码保护</li>
+                                <li>支持批量压缩多个文件</li>
+                                <li>支持分卷压缩</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="faq-section">
+                    <h3>常见问题解答</h3>
+                    
+                    <details class="faq-item">
+                        <summary>转换后的文件会保存在哪里？</summary>
+                        <div class="faq-answer">
+                            <p>转换完成后，文件会自动下载到您的本地下载文件夹中。您也可以点击"下载"按钮手动保存文件。所有的转换记录也会保存在"历史记录"中，您可以随时查看和重新下载。</p>
+                        </div>
+                    </details>
+                    
+                    <details class="faq-item">
+                        <summary>转换过程中的文件安全性如何保障？</summary>
+                        <div class="faq-answer">
+                            <p>所有的文件转换和处理都在您的本地浏览器中进行，文件不会上传到任何服务器。转换完成后，文件数据会保存在您的浏览器本地存储中，只有您能够访问。我们不会收集或存储您的任何文件内容。</p>
+                        </div>
+                    </details>
+                    
+                    <details class="faq-item">
+                        <summary>是否可以批量转换多个文件？</summary>
+                        <div class="faq-answer">
+                            <p>是的，每个功能模块都支持批量处理模式。您可以点击"批量转换"标签，然后添加多个文件进行批量处理。批量处理最多支持同时转换20个文件。</p>
+                        </div>
+                    </details>
+                    
+                    <details class="faq-item">
+                        <summary>如何保持最佳的转换质量？</summary>
+                        <div class="faq-answer">
+                            <p>要获得最佳的转换质量，可以：</p>
+                            <ul>
+                                <li>选择合适的目标格式（不同格式适合不同用途）</li>
+                                <li>调整质量滑块至较高值（图像转换时）</li>
+                                <li>启用"保留元数据"选项（如果需要保留原文件的信息）</li>
+                                <li>对于图像转换，选择合适的压缩方式（无损/有损）</li>
+                            </ul>
+                        </div>
+                    </details>
+                    
+                    <details class="faq-item">
+                        <summary>为什么我看不到刚转换的文件在历史记录中？</summary>
+                        <div class="faq-answer">
+                            <p>历史记录保存在浏览器的本地存储中。如果您使用了浏览器的隐私模式，或者清除了浏览器数据，历史记录可能会丢失。同时，不同浏览器或设备之间的历史记录不会同步。</p>
+                        </div>
+                    </details>
+                </div>
+            </section>
+        </main>
     </div>
 
     <!-- 错误提示组件 -->
@@ -869,5 +1048,9 @@
     <script src="js/main.js"></script>
     <!-- PDF转换模块 -->
     <script src="js/pdf-converter.js"></script>
+    <!-- 历史记录管理器 -->
+    <script src="js/history-manager.js"></script>
+    <!-- 帮助中心管理器 -->
+    <script src="js/help-manager.js"></script>
 </body>
 </html> 
