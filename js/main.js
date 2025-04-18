@@ -260,7 +260,7 @@ function initApp() {
     loadHistoryFromStorage();
     
     // 默认显示图片转换页面
-    switchMainTab('image-converter');
+    switchMainTab('image');
     
     // 显示应用已准备就绪
     console.log('应用初始化完成');
@@ -1254,7 +1254,7 @@ function updatePdfUI() {
 // 绑定事件监听器
 function bindEventListeners() {
     // 侧边栏导航点击事件
-    document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+    document.querySelectorAll('.sidebar-nav li').forEach(item => {
         item.addEventListener('click', function() {
             const targetTab = this.dataset.tab;
             switchMainTab(targetTab);
@@ -1936,12 +1936,9 @@ function convertToSVG(canvas, imgElement) {
 
 // 主标签页切换
 function switchMainTab(tabId) {
-    // 获取所有主内容区域
-    const mainContents = document.querySelectorAll('.main-content');
-    
     // 隐藏所有内容区域
-    mainContents.forEach(content => {
-        content.style.display = 'none';
+    document.querySelectorAll('.app-container').forEach(container => {
+        container.style.display = 'none';
     });
     
     // 移除所有导航项的激活状态
@@ -1959,15 +1956,18 @@ function switchMainTab(tabId) {
         }
     }
     
-    // 显示选中的内容区域
-    const selectedContent = document.getElementById(tabId);
+    // 显示选中的内容区域 - 使用tabId-tab的形式
+    const tabContainerId = `${tabId}-tab`;
+    const selectedContent = document.getElementById(tabContainerId);
     if (selectedContent) {
         selectedContent.style.display = 'block';
         
         // 如果是历史记录页面，刷新历史记录
-        if (tabId === 'history-section') {
+        if (tabId === 'history') {
             loadHistoryFromStorage();
         }
+    } else {
+        console.error(`找不到ID为 ${tabContainerId} 的内容区域`);
     }
 }
 
