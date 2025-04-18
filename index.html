@@ -19,10 +19,7 @@
         <nav class="sidebar-nav">
             <ul>
                 <li class="active" data-tab="image"><a href="#"><span class="material-icons">image</span>图像转换</a></li>
-                <li data-tab="pdf"><a href="#"><span class="material-icons">picture_as_pdf</span>PDF转换</a></li>
                 <li data-tab="document"><a href="#"><span class="material-icons">description</span>文档转换</a></li>
-                <li data-tab="compress"><a href="#"><span class="material-icons">compress</span>文件压缩</a></li>
-                <li data-tab="history"><a href="#"><span class="material-icons">history</span>历史记录</a></li>
                 <li data-tab="help"><a href="#"><span class="material-icons">help_outline</span>使用帮助</a></li>
             </ul>
         </nav>
@@ -239,208 +236,6 @@
             </section>
         </main>
 
-        <!-- PDF转换部分 -->
-        <main class="app-container" id="pdf-tab" style="display: none;">
-            <section class="file-input-section">
-                <div class="input-tabs">
-                    <button class="tab-btn active" data-tab="local-pdf"><span class="material-icons">folder</span>本地文件</button>
-                    <button class="tab-btn" data-tab="url-pdf"><span class="material-icons">link</span>URL链接</button>
-                    <button class="tab-btn" data-tab="batch-pdf"><span class="material-icons">view_list</span>批量转换</button>
-                </div>
-                
-                <div class="tab-content active" id="local-pdf-tab">
-                    <div class="drop-area" id="pdf-drop-area">
-                        <input type="file" id="pdf-file-input" hidden>
-                        <div class="drop-message">
-                            <span class="material-icons large-icon">cloud_upload</span>
-                            <p>拖拽文件到此处或<span class="upload-btn" id="pdf-upload-btn">点击上传</span></p>
-                            <p class="file-limit">支持PDF、Word、Excel、PowerPoint、图像等多种格式</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="url-pdf-tab">
-                    <div class="url-input-container">
-                        <input type="text" id="pdf-url-input" placeholder="输入文件URL地址" class="url-input">
-                        <button id="pdf-fetch-url" class="primary-btn"><span class="material-icons">download</span>获取</button>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="batch-pdf-tab">
-                    <div class="batch-container">
-                        <div class="batch-droparea" id="batch-pdf-drop-area">
-                            <input type="file" id="batch-pdf-file-input" hidden multiple>
-                            <div class="drop-message">
-                                <span class="material-icons large-icon">drive_folder_upload</span>
-                                <p>拖拽多个文件到此处或<span class="batch-upload-btn">点击上传</span></p>
-                                <p class="batch-limit">最多同时转换10个文件，每个文件不超过20MB</p>
-                            </div>
-                        </div>
-                        <div class="batch-list-container">
-                            <h4>待转换文件列表<span id="batch-pdf-count">(0)</span></h4>
-                            <div class="batch-file-list" id="batch-pdf-file-list">
-                                <div class="empty-batch-list">请添加文件以开始批量转换</div>
-                            </div>
-                            <div class="batch-actions">
-                                <button id="add-more-pdf-files" class="secondary-btn">
-                                    <span class="material-icons">add</span>添加更多
-                                </button>
-                                <button id="clear-batch-pdf" class="secondary-btn">
-                                    <span class="material-icons">clear_all</span>清除全部
-                                </button>
-                                <button id="batch-pdf-convert" class="primary-btn" disabled>
-                                    <span class="material-icons">autorenew</span>开始批量转换
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <section class="settings-section">
-                <div class="format-selector">
-                    <h3>目标格式</h3>
-                    <div class="format-options">
-                        <div class="format-group">
-                            <h4>常用格式</h4>
-                            <div class="format-buttons">
-                                <button class="format-btn" data-format="pdf">PDF</button>
-                                <button class="format-btn" data-format="docx">DOCX</button>
-                                <button class="format-btn" data-format="xlsx">XLSX</button>
-                                <button class="format-btn" data-format="pptx">PPTX</button>
-                                <button class="format-btn" data-format="jpg">JPG</button>
-                            </div>
-                        </div>
-                        <div class="format-group">
-                            <h4>其他格式</h4>
-                            <div class="format-buttons">
-                                <button class="format-btn" data-format="png">PNG</button>
-                                <button class="format-btn" data-format="txt">TXT</button>
-                                <button class="format-btn" data-format="html">HTML</button>
-                                <button class="format-btn" data-format="rtf">RTF</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="quality-selector">
-                    <h3>质量设置 <span id="pdf-quality-value">90%</span></h3>
-                    <input type="range" id="pdf-quality-slider" min="1" max="100" value="90" class="range-slider">
-                    <div class="quality-labels">
-                        <span>低</span>
-                        <span>高</span>
-                    </div>
-                </div>
-                
-                <div class="size-selector">
-                    <h3>尺寸调整</h3>
-                    <div class="size-inputs">
-                        <div class="option-item">
-                            <label for="pdf-page-size">页面大小</label>
-                            <select id="pdf-page-size">
-                                <option value="a4" selected>A4 (210×297mm)</option>
-                                <option value="letter">Letter (216×279mm)</option>
-                                <option value="legal">Legal (216×356mm)</option>
-                                <option value="original">保持原始大小</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="advanced-options">
-                    <details>
-                        <summary>高级选项</summary>
-                        <div class="option-group">
-                            <div class="option-item">
-                                <label for="pdf-metadata-toggle">保留元数据</label>
-                                <label class="switch">
-                                    <input type="checkbox" id="pdf-metadata-toggle" checked>
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                            <div class="option-item">
-                                <label for="pdf-page-range">页面范围</label>
-                                <input type="text" id="pdf-page-range" placeholder="例如1-5,8,11-13" value="全部">
-                            </div>
-                            <div class="option-item">
-                                <label for="pdf-orientation">页面方向</label>
-                                <select id="pdf-orientation">
-                                    <option value="auto" selected>自动检测</option>
-                                    <option value="portrait">纵向</option>
-                                    <option value="landscape">横向</option>
-                                </select>
-                            </div>
-                        </div>
-                    </details>
-                </div>
-            </section>
-            
-            <section class="preview-section">
-                <div class="preview-header">
-                    <h3>实时预览</h3>
-                    <div class="preview-controls">
-                        <button id="zoom-in-pdf" class="icon-btn"><span class="material-icons">zoom_in</span></button>
-                        <button id="zoom-out-pdf" class="icon-btn"><span class="material-icons">zoom_out</span></button>
-                        <button id="toggle-split-pdf" class="icon-btn"><span class="material-icons">view_agenda</span></button>
-                    </div>
-                </div>
-                
-                <div class="preview-container split-view">
-                    <div class="preview-pane original">
-                        <div class="preview-label">原始文件</div>
-                        <div class="image-container" id="original-pdf-preview">
-                            <div class="no-preview-message">
-                                <span class="material-icons">description</span>
-                                <p>上传文件后显示预览</p>
-                            </div>
-                        </div>
-                        <div class="image-info">
-                            <span class="format-info">格式: <span id="original-pdf-format">--</span></span>
-                            <span class="size-info">大小: <span id="original-pdf-size">--</span></span>
-                        </div>
-                    </div>
-                    
-                    <div class="preview-pane converted">
-                        <div class="preview-label">转换预览</div>
-                        <div class="image-container" id="converted-pdf-preview">
-                            <div class="no-preview-message">
-                                <span class="material-icons">text_format</span>
-                                <p>设置转换参数后预览效果</p>
-                            </div>
-                        </div>
-                        <div class="image-info">
-                            <span class="format-info">格式: <span id="converted-pdf-format">--</span></span>
-                            <span class="size-info">预估大小: <span id="converted-pdf-size">--</span></span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <section class="action-section">
-                <div class="progress-container">
-                    <div class="progress-bar" id="pdf-conversion-progress">
-                        <div class="progress-fill"></div>
-                    </div>
-                    <div class="progress-status">
-                        <span id="pdf-status-message">准备就绪</span>
-                        <span id="pdf-progress-percentage">0%</span>
-                    </div>
-                </div>
-                
-                <div class="action-buttons">
-                    <button id="pdf-convert-btn" class="primary-btn" disabled>
-                        <span class="material-icons">autorenew</span>开始转换
-                    </button>
-                    <button id="pdf-cancel-btn" class="secondary-btn" disabled>
-                        <span class="material-icons">cancel</span>取消
-                    </button>
-                    <button id="pdf-download-btn" class="success-btn" disabled>
-                        <span class="material-icons">file_download</span>下载
-                    </button>
-                </div>
-            </section>
-        </main>
-
         <!-- 文档转换部分 -->
         <main class="app-container" id="document-tab" style="display: none;">
             <section class="file-input-section">
@@ -456,7 +251,7 @@
                         <div class="drop-message">
                             <span class="material-icons large-icon">cloud_upload</span>
                             <p>拖拽文件到此处或<span class="upload-btn" id="document-upload-btn">点击上传</span></p>
-                            <p class="file-limit">支持Word、Excel、PowerPoint、PDF等多种格式</p>
+                            <p class="file-limit">支持Word、Excel、PowerPoint、PDF等多种文档格式的互相转换</p>
                         </div>
                     </div>
                 </div>
@@ -506,20 +301,21 @@
                         <div class="format-group">
                             <h4>常用格式</h4>
                             <div class="format-buttons">
-                                <button class="format-btn" data-format="docx">DOCX</button>
                                 <button class="format-btn" data-format="pdf">PDF</button>
+                                <button class="format-btn" data-format="docx">DOCX</button>
                                 <button class="format-btn" data-format="xlsx">XLSX</button>
                                 <button class="format-btn" data-format="pptx">PPTX</button>
                                 <button class="format-btn" data-format="txt">TXT</button>
                             </div>
                         </div>
                         <div class="format-group">
-                            <h4>其他格式</h4>
+                            <h4>图像与其他格式</h4>
                             <div class="format-buttons">
+                                <button class="format-btn" data-format="jpg">JPG</button>
+                                <button class="format-btn" data-format="png">PNG</button>
                                 <button class="format-btn" data-format="rtf">RTF</button>
                                 <button class="format-btn" data-format="odt">ODT</button>
                                 <button class="format-btn" data-format="html">HTML</button>
-                                <button class="format-btn" data-format="jpg">JPG</button>
                             </div>
                         </div>
                     </div>
@@ -650,205 +446,12 @@
         
         <!-- 文件压缩部分 -->
         <main class="app-container" id="compress-tab" style="display: none;">
-            <section class="file-input-section">
-                <div class="input-tabs">
-                    <button class="tab-btn active" data-tab="local-compress"><span class="material-icons">folder</span>本地文件</button>
-                    <button class="tab-btn" data-tab="batch-compress"><span class="material-icons">view_list</span>批量压缩</button>
-                </div>
-                
-                <div class="tab-content active" id="local-compress-tab">
-                    <div class="drop-area" id="compress-drop-area">
-                        <input type="file" id="compress-file-input" hidden>
-                        <div class="drop-message">
-                            <span class="material-icons large-icon">cloud_upload</span>
-                            <p>拖拽文件到此处或<span class="upload-btn" id="compress-upload-btn">点击上传</span></p>
-                            <p class="file-limit">支持ZIP、RAR、7Z等多种压缩文件，或需要压缩的任意文件</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="batch-compress-tab">
-                    <div class="batch-container">
-                        <div class="batch-droparea" id="batch-compress-drop-area">
-                            <input type="file" id="batch-compress-file-input" hidden multiple>
-                            <div class="drop-message">
-                                <span class="material-icons large-icon">drive_folder_upload</span>
-                                <p>拖拽多个文件到此处或<span class="batch-upload-btn">点击上传</span></p>
-                                <p class="batch-limit">最多同时压缩20个文件，每个文件不超过50MB</p>
-                            </div>
-                        </div>
-                        <div class="batch-list-container">
-                            <h4>待压缩文件列表<span id="batch-compress-count">(0)</span></h4>
-                            <div class="batch-file-list" id="batch-compress-file-list">
-                                <div class="empty-batch-list">请添加文件以开始批量压缩</div>
-                            </div>
-                            <div class="batch-actions">
-                                <button id="add-more-compress-files" class="secondary-btn">
-                                    <span class="material-icons">add</span>添加更多
-                                </button>
-                                <button id="clear-batch-compress" class="secondary-btn">
-                                    <span class="material-icons">clear_all</span>清除全部
-                                </button>
-                                <button id="batch-compress-start" class="primary-btn" disabled>
-                                    <span class="material-icons">compress</span>开始批量压缩
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <section class="settings-section">
-                <div class="format-selector">
-                    <h3>压缩格式</h3>
-                    <div class="format-options">
-                        <div class="format-group">
-                            <h4>输出格式</h4>
-                            <div class="format-buttons">
-                                <button class="format-btn active" data-format="zip">ZIP</button>
-                                <button class="format-btn" data-format="7z">7Z</button>
-                                <button class="format-btn" data-format="tar">TAR</button>
-                                <button class="format-btn" data-format="gz">GZ</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="quality-selector">
-                    <h3>压缩级别 <span id="compress-level-value">普通</span></h3>
-                    <input type="range" id="compress-level-slider" min="1" max="3" value="2" class="range-slider">
-                    <div class="quality-labels">
-                        <span>快速</span>
-                        <span>平衡</span>
-                        <span>最小体积</span>
-                    </div>
-                </div>
-                
-                <div class="advanced-options">
-                    <details>
-                        <summary>高级选项</summary>
-                        <div class="option-group">
-                            <div class="option-item">
-                                <label for="compress-password">添加密码保护</label>
-                                <input type="password" id="compress-password" placeholder="留空表示不加密">
-                            </div>
-                            <div class="option-item">
-                                <label for="split-archive">分卷大小</label>
-                                <select id="split-archive">
-                                    <option value="0">不分卷</option>
-                                    <option value="10">10MB</option>
-                                    <option value="50">50MB</option>
-                                    <option value="100">100MB</option>
-                                    <option value="700">700MB (CD)</option>
-                                    <option value="4700">4.7GB (DVD)</option>
-                                </select>
-                            </div>
-                            <div class="option-item">
-                                <label for="save-folder-structure">保留文件夹结构</label>
-                                <label class="switch">
-                                    <input type="checkbox" id="save-folder-structure" checked>
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </details>
-                </div>
-            </section>
-            
-            <section class="preview-section">
-                <div class="preview-header">
-                    <h3>压缩预览</h3>
-                </div>
-                
-                <div class="compress-preview-container">
-                    <div class="compress-info">
-                        <div class="file-info-item">
-                            <span class="info-label">文件名:</span>
-                            <span id="compress-filename">未选择文件</span>
-                        </div>
-                        <div class="file-info-item">
-                            <span class="info-label">原始大小:</span>
-                            <span id="compress-original-size">-- MB</span>
-                        </div>
-                        <div class="file-info-item">
-                            <span class="info-label">预计压缩后:</span>
-                            <span id="compress-estimated-size">-- MB</span>
-                        </div>
-                        <div class="file-info-item">
-                            <span class="info-label">预计压缩率:</span>
-                            <span id="compress-ratio">--%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="compress-files-preview">
-                        <h4>包含文件列表</h4>
-                        <div id="compress-files-tree" class="files-tree">
-                            <div class="no-files-message">
-                                <span class="material-icons">folder_open</span>
-                                <p>请选择文件查看内容</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <section class="action-section">
-                <div class="progress-container">
-                    <div class="progress-bar" id="compress-progress">
-                        <div class="progress-fill"></div>
-                    </div>
-                    <div class="progress-status">
-                        <span id="compress-status-message">准备就绪</span>
-                        <span id="compress-progress-percentage">0%</span>
-                    </div>
-                </div>
-                
-                <div class="action-buttons">
-                    <button id="compress-start-btn" class="primary-btn" disabled>
-                        <span class="material-icons">compress</span>开始压缩
-                    </button>
-                    <button id="compress-cancel-btn" class="secondary-btn" disabled>
-                        <span class="material-icons">cancel</span>取消
-                    </button>
-                    <button id="compress-download-btn" class="success-btn" disabled>
-                        <span class="material-icons">file_download</span>下载
-                    </button>
-                </div>
-            </section>
+            <!-- 文件压缩部分已隐藏 -->
         </main>
 
         <!-- 历史记录部分 -->
         <main class="app-container" id="history-tab" style="display: none;">
-            <section class="history-section">
-                <div class="history-header">
-                    <h3>转换历史记录</h3>
-                    <p>查看和管理您的转换历史</p>
-                </div>
-                
-                <div class="history-controls">
-                    <div class="history-search">
-                        <input type="text" id="history-search-input" placeholder="搜索文件名或格式...">
-                        <button id="history-search-btn" class="primary-btn"><span class="material-icons">search</span></button>
-                    </div>
-                    <button id="clear-all-history" class="secondary-btn"><span class="material-icons">delete_sweep</span>清除全部</button>
-                </div>
-                
-                <div id="empty-history" class="empty-history">
-                    <div class="empty-icon">
-                        <span class="material-icons">history</span>
-                    </div>
-                    <p>暂无历史记录</p>
-                    <p class="empty-subtext">当您转换文件后，记录将显示在这里</p>
-                </div>
-                
-                <div id="history-list" class="history-list">
-                    <!-- 历史记录项将通过JavaScript动态添加 -->
-                </div>
-                
-                <div class="history-pagination">
-                    <!-- 分页控件将通过JavaScript动态添加 -->
-                </div>
-            </section>
+            <!-- 历史记录部分已隐藏 -->
         </main>
         
         <!-- 使用帮助部分 -->
@@ -880,25 +483,6 @@
                         </div>
                     </div>
                     
-                    <!-- PDF转换帮助卡片 -->
-                    <div class="help-card">
-                        <div class="help-card-header" style="background-color: var(--pdf-color);">
-                            <span class="material-icons">picture_as_pdf</span>
-                            <h3>PDF转换</h3>
-                        </div>
-                        <div class="help-card-content">
-                            <p>PDF转换支持将文档转为PDF或将PDF转为其他格式。</p>
-                            <p>功能特点：</p>
-                            <ul>
-                                <li>支持将各种文档转为PDF（DOC, DOCX, XLS, PPT等）</li>
-                                <li>支持将PDF转为Word、图片或其他格式</li>
-                                <li>提供高质量PDF转换效果</li>
-                                <li>可设置页面大小、方向等参数</li>
-                            </ul>
-                            <p>最适合用于办公文档、学术论文和电子表格的处理。</p>
-                        </div>
-                    </div>
-                    
                     <!-- 文档转换帮助卡片 -->
                     <div class="help-card">
                         <div class="help-card-header" style="background-color: var(--document-color);">
@@ -906,7 +490,7 @@
                             <h3>文档转换</h3>
                         </div>
                         <div class="help-card-content">
-                            <p>文档转换支持各种办公文档格式之间的互相转换。</p>
+                            <p>文档转换支持各种办公文档和PDF格式之间的互相转换。</p>
                             <p>支持的格式：</p>
                             <table class="format-tips">
                                 <tr>
@@ -915,7 +499,7 @@
                                 </tr>
                                 <tr>
                                     <td>文本文档</td>
-                                    <td>DOCX, DOC, RTF, TXT, ODT</td>
+                                    <td>PDF, DOCX, DOC, RTF, TXT, ODT</td>
                                 </tr>
                                 <tr>
                                     <td>电子表格</td>
@@ -925,27 +509,24 @@
                                     <td>演示文稿</td>
                                     <td>PPTX, PPT, ODP</td>
                                 </tr>
+                                <tr>
+                                    <td>图像格式</td>
+                                    <td>JPG, PNG (从PDF转出或转为PDF)</td>
+                                </tr>
                             </table>
+                            <p>功能特点：</p>
+                            <ul>
+                                <li>支持将各种文档转为PDF</li>
+                                <li>支持将PDF转为Word、图片或其他格式</li>
+                                <li>提供高质量转换效果</li>
+                                <li>可设置页面大小、方向等参数</li>
+                            </ul>
                         </div>
                     </div>
                     
                     <!-- 文件压缩帮助卡片 -->
-                    <div class="help-card">
-                        <div class="help-card-header" style="background-color: var(--compress-color);">
-                            <span class="material-icons">compress</span>
-                            <h3>文件压缩</h3>
-                        </div>
-                        <div class="help-card-content">
-                            <p>文件压缩功能支持创建各种格式的压缩文件以及解压已有压缩包。</p>
-                            <p>主要功能：</p>
-                            <ul>
-                                <li>支持ZIP、7Z、TAR、GZ等格式</li>
-                                <li>可设置压缩级别（快速/平衡/最小体积）</li>
-                                <li>支持添加密码保护</li>
-                                <li>支持批量压缩多个文件</li>
-                                <li>支持分卷压缩</li>
-                            </ul>
-                        </div>
+                    <div class="help-card" style="display: none;">
+                        <!-- 文件压缩帮助内容已隐藏 -->
                     </div>
                 </div>
                 
@@ -989,7 +570,7 @@
                     <details class="faq-item">
                         <summary>为什么我看不到刚转换的文件在历史记录中？</summary>
                         <div class="faq-answer">
-                            <p>历史记录保存在浏览器的本地存储中。如果您使用了浏览器的隐私模式，或者清除了浏览器数据，历史记录可能会丢失。同时，不同浏览器或设备之间的历史记录不会同步。</p>
+                            <p>本应用不保存历史记录，每次转换完成后请立即下载转换后的文件。</p>
                         </div>
                     </details>
                 </div>
@@ -1046,11 +627,5 @@
 
     <!-- 主脚本-->
     <script src="js/main.js"></script>
-    <!-- PDF转换模块 -->
-    <script src="js/pdf-converter.js"></script>
-    <!-- 历史记录管理器 -->
-    <script src="js/history-manager.js"></script>
-    <!-- 帮助中心管理器 -->
-    <script src="js/help-manager.js"></script>
 </body>
 </html> 
