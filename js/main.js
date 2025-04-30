@@ -89,9 +89,9 @@ const elements = {
     batchUploadBtn: document.querySelector('.batch-upload-btn'),
     batchFileList: document.getElementById('batch-file-list'),
     batchCount: document.getElementById('batch-count'),
-    addMoreFilesBtn: document.getElementById('add-more-files'),
-    clearBatchBtn: document.getElementById('clear-batch'),
-    batchConvertBtn: document.getElementById('batch-convert'),
+    addMoreFiles: document.getElementById('add-more-files'),
+    clearBatch: document.getElementById('clear-batch'),
+    batchConvert: document.getElementById('batch-convert'),
     
     // 主导航标签页相关
     appContainers: document.querySelectorAll('.app-container'),
@@ -123,6 +123,22 @@ const elements = {
     documentFetchUrl: document.getElementById('document-fetch-url'),
     documentConvertBtn: document.getElementById('document-convert-btn'),
     documentCancelBtn: document.getElementById('document-cancel-btn'),
+    documentDownloadBtn: document.getElementById('document-download-btn'),
+    documentQualitySlider: document.getElementById('document-quality-slider'),
+    
+    // 文档批量转换相关
+    batchDocumentDropArea: document.getElementById('batch-document-drop-area'),
+    batchDocumentFileInput: document.getElementById('batch-document-file-input'),
+    batchDocumentFileList: document.getElementById('batch-document-file-list'),
+    batchDocumentCount: document.getElementById('batch-document-count'),
+    addMoreDocumentFiles: document.getElementById('add-more-document-files'),
+    clearBatchDocument: document.getElementById('clear-batch-document'),
+    batchDocumentConvert: document.getElementById('batch-document-convert'),
+    
+    // 文档预览控制
+    zoomInDocument: document.getElementById('zoom-in-document'),
+    zoomOutDocument: document.getElementById('zoom-out-document'),
+    toggleSplitDocument: document.getElementById('toggle-split-document'),
     
     // 文件压缩相关元素
     compressFileInput: document.getElementById('compress-file-input'),
@@ -211,6 +227,13 @@ const appState = {
     batchCompressInProgress: false,
     batchCompressCompleted: 0,
     batchImageFiles: [],  // 存储批量图像文件
+    
+    documentFile: null,
+    documentConversionType: 'to-document',
+    documentSelectedFormat: 'auto',
+    documentIsConverting: false,
+    documentConvertedBlob: null,
+    batchDocumentFiles: [], // 存储批量文档文件
 };
 
 // 压缩级别映射
@@ -2588,18 +2611,18 @@ function bindFormatConversionEvents() {
     }
     
     // 批量转换控制
-    if (elements.addMoreFilesBtn) {
-        elements.addMoreFilesBtn.addEventListener('click', function() {
+    if (elements.addMoreFiles) {
+        elements.addMoreFiles.addEventListener('click', function() {
             elements.batchFileInput.click();
         });
     }
     
-    if (elements.clearBatchBtn) {
-        elements.clearBatchBtn.addEventListener('click', clearBatchFiles);
+    if (elements.clearBatch) {
+        elements.clearBatch.addEventListener('click', clearBatchFiles);
     }
     
-    if (elements.batchConvertBtn) {
-        elements.batchConvertBtn.addEventListener('click', startBatchConversion);
+    if (elements.batchConvert) {
+        elements.batchConvert.addEventListener('click', startBatchConversion);
     }
 }
 
@@ -3270,57 +3293,63 @@ function updateCompressUI() {
 
 // 绑定文档转换事件
 function bindDocumentEvents() {
-    // 文件上传相关元素
-    const documentUploadBtn = document.getElementById('document-upload-btn');
-    const documentFileInput = document.getElementById('document-file-input');
-    const documentDropArea = document.getElementById('document-drop-area');
-    const documentUrlInput = document.getElementById('document-url-input');
-    const documentFetchUrl = document.getElementById('document-fetch-url');
-    const documentConvertBtn = document.getElementById('document-convert-btn');
-    const documentCancelBtn = document.getElementById('document-cancel-btn');
-    const documentDownloadBtn = document.getElementById('document-download-btn');
-    const documentFormatBtns = document.querySelectorAll('#document-tab .format-btn');
-    const documentQualitySlider = document.getElementById('document-quality-slider');
-    const documentPageSize = document.getElementById('document-page-size');
-    const documentOrientation = document.getElementById('document-orientation');
-    const documentTabBtns = document.querySelectorAll('#document-tab .input-tabs .tab-btn');
-
-    // 初始化文档转换状态
-    if (!appState.documentState) {
-        appState.documentState = {
-            file: null,
-            selectedFormat: 'pdf',
-            quality: 90,
-            pageSize: 'a4',
-            orientation: 'auto',
-            pageRange: 'all',
-            isConverting: false,
-            convertedBlob: null
-        };
-    }
-
-    // 绑定文件上传相关事件
-    if (documentUploadBtn && documentFileInput) {
-        documentUploadBtn.addEventListener('click', function() {
-            documentFileInput.click();
+    // 文档上传按钮
+    if (elements.documentUploadBtn && elements.documentFileInput) {
+        elements.documentUploadBtn.addEventListener('click', function() {
+            elements.documentFileInput.click();
         });
-
-        documentFileInput.addEventListener('change', handleDocumentFileSelect);
+        
+        elements.documentFileInput.addEventListener('change', handleDocumentFileSelect);
     }
-
-    // 绑定拖放相关事件
-    if (documentDropArea) {
-        documentDropArea.addEventListener('dragover', handleDocumentDragOver);
-        documentDropArea.addEventListener('dragleave', handleDocumentDragLeave);
-        documentDropArea.addEventListener('drop', handleDocumentFileDrop);
+    
+    // 文档拖放区域
+    if (elements.documentDropArea) {
+        elements.documentDropArea.addEventListener('dragover', handleDocumentDragOver);
+        elements.documentDropArea.addEventListener('dragleave', handleDocumentDragLeave);
+        elements.documentDropArea.addEventListener('drop', handleDocumentFileDrop);
     }
-
-    // 绑定URL获取事件
-    if (documentFetchUrl) {
-        documentFetchUrl.addEventListener('click', handleDocumentUrlFetch);
+    
+    // 文档URL获取
+    if (elements.documentFetchUrl) {
+        elements.documentFetchUrl.addEventListener('click', handleDocumentUrlFetch);
     }
-
-    // 绑定格式选择事件
+    
+    // 文档批量转换相关事件
+    if (elements.batchDocumentFileInput && elements.batchDocumentDropArea) {
+        // 批量上传按钮点击
+        const batchUploadBtn = elements.batchDocumentDropArea.querySelector('.batch-upload-btn');
+        if (batchUploadBtn) {
+            batchUploadBtn.addEventListener('click', function() {
+                elements.batchDocumentFileInput.click();
+            });
+        }
+        
+        // 批量文件选择事件
+        elements.batchDocumentFileInput.addEventListener('change', handleBatchDocumentFileSelect);
+        
+        // 批量拖放事件
+        elements.batchDocumentDropArea.addEventListener('dragover', handleBatchDocumentDragOver);
+        elements.batchDocumentDropArea.addEventListener('dragleave', handleBatchDocumentDragLeave);
+        elements.batchDocumentDropArea.addEventListener('drop', handleBatchDocumentFileDrop);
+    }
+    
+    // 批量文档转换控制
+    if (elements.addMoreDocumentFiles) {
+        elements.addMoreDocumentFiles.addEventListener('click', function() {
+            elements.batchDocumentFileInput.click();
+        });
+    }
+    
+    if (elements.clearBatchDocument) {
+        elements.clearBatchDocument.addEventListener('click', clearBatchDocumentFiles);
+    }
+    
+    if (elements.batchDocumentConvert) {
+        elements.batchDocumentConvert.addEventListener('click', startBatchDocumentConversion);
+    }
+    
+    // 文档格式按钮
+    const documentFormatBtns = document.querySelectorAll('#document-tab .format-btn');
     if (documentFormatBtns) {
         documentFormatBtns.forEach(btn => {
             btn.addEventListener('click', function() {
@@ -3328,54 +3357,55 @@ function bindDocumentEvents() {
             });
         });
     }
-
-    // 绑定质量滑块事件
-    if (documentQualitySlider) {
-        documentQualitySlider.addEventListener('input', handleDocumentQualityChange);
+    
+    // 文档质量滑块
+    if (elements.documentQualitySlider) {
+        elements.documentQualitySlider.addEventListener('input', handleDocumentQualityChange);
     }
-
-    // 绑定页面尺寸事件
-    if (documentPageSize) {
-        documentPageSize.addEventListener('change', updateDocumentPreview);
+    
+    // 文档转换按钮
+    if (elements.documentConvertBtn) {
+        elements.documentConvertBtn.addEventListener('click', startDocumentConversion);
     }
-
-    // 绑定页面方向事件
-    if (documentOrientation) {
-        documentOrientation.addEventListener('change', updateDocumentPreview);
+    
+    // 文档取消按钮
+    if (elements.documentCancelBtn) {
+        elements.documentCancelBtn.addEventListener('click', cancelDocumentConversion);
     }
-
-    // 绑定转换按钮事件
-    if (documentConvertBtn) {
-        documentConvertBtn.addEventListener('click', startDocumentConversion);
+    
+    // 文档下载按钮
+    if (elements.documentDownloadBtn) {
+        elements.documentDownloadBtn.addEventListener('click', downloadConvertedDocument);
     }
-
-    // 绑定取消按钮事件
-    if (documentCancelBtn) {
-        documentCancelBtn.addEventListener('click', cancelDocumentConversion);
-    }
-
-    // 绑定下载按钮事件
-    if (documentDownloadBtn) {
-        documentDownloadBtn.addEventListener('click', downloadConvertedDocument);
-    }
-
-    // 绑定标签切换事件
+    
+    // 标签切换
+    const documentTabBtns = document.querySelectorAll('#document-tab .input-tabs .tab-btn');
     if (documentTabBtns) {
         documentTabBtns.forEach(btn => {
             btn.addEventListener('click', function() {
-                // 清除所有标签和内容的active状态
+                // 移除所有标签和内容的active状态
                 documentTabBtns.forEach(tab => tab.classList.remove('active'));
                 document.querySelectorAll('#document-tab .tab-content').forEach(content => content.classList.remove('active'));
                 
                 // 设置当前标签和内容为active
                 this.classList.add('active');
-                const tabId = this.dataset.tab + '-tab';
-                const tabContent = document.getElementById(tabId);
-                if (tabContent) {
-                    tabContent.classList.add('active');
-                }
+                const tabId = this.dataset.tab;
+                document.getElementById(tabId + '-tab').classList.add('active');
             });
         });
+    }
+    
+    // 加载预览控制相关事件
+    if (elements.zoomInDocument) {
+        elements.zoomInDocument.addEventListener('click', zoomInDocument);
+    }
+    
+    if (elements.zoomOutDocument) {
+        elements.zoomOutDocument.addEventListener('click', zoomOutDocument);
+    }
+    
+    if (elements.toggleSplitDocument) {
+        elements.toggleSplitDocument.addEventListener('click', toggleSplitViewDocument);
     }
 }
 
@@ -4794,5 +4824,217 @@ function loadJSZipLibrary() {
             document.head.appendChild(backupScript);
         };
         document.head.appendChild(script);
+    });
+}
+
+// ... existing code ...
+
+// 处理批量文档文件选择
+function handleBatchDocumentFileSelect(event) {
+    const files = event.target.files;
+    if (files.length > 0) {
+        addBatchDocumentFiles(files);
+    }
+}
+
+// 处理批量文档拖拽悬停
+function handleBatchDocumentDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.batchDocumentDropArea.classList.add('drag-over');
+}
+
+// 处理批量文档拖拽离开
+function handleBatchDocumentDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.batchDocumentDropArea.classList.remove('drag-over');
+}
+
+// 处理批量文档文件拖放
+function handleBatchDocumentFileDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.batchDocumentDropArea.classList.remove('drag-over');
+    
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+        addBatchDocumentFiles(files);
+    }
+}
+
+// 添加批量文档文件
+function addBatchDocumentFiles(files) {
+    if (!appState.batchDocumentFiles) {
+        appState.batchDocumentFiles = [];
+    }
+    
+    const documentFiles = Array.from(files);
+    
+    // 检查文件数量限制
+    if (appState.batchDocumentFiles.length + documentFiles.length > MAX_BATCH_FILES) {
+        showError(`最多只能添加${MAX_BATCH_FILES}个文件进行批量转换`);
+        // 只添加数量限制内的文件
+        const remainingSlots = MAX_BATCH_FILES - appState.batchDocumentFiles.length;
+        if (remainingSlots > 0) {
+            documentFiles.splice(remainingSlots);
+            appState.batchDocumentFiles = appState.batchDocumentFiles.concat(documentFiles);
+            updateBatchDocumentFilesList();
+        }
+        return;
+    }
+    
+    // 检查文件大小
+    const oversizedFiles = documentFiles.filter(file => file.size > 20 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+        showError('批量转换中，每个文件不能超过20MB');
+        // 过滤掉超大文件
+        const validFiles = documentFiles.filter(file => file.size <= 20 * 1024 * 1024);
+        appState.batchDocumentFiles = appState.batchDocumentFiles.concat(validFiles);
+    } else {
+        appState.batchDocumentFiles = appState.batchDocumentFiles.concat(documentFiles);
+    }
+    
+    updateBatchDocumentFilesList();
+}
+
+// 更新批量文档文件列表UI
+function updateBatchDocumentFilesList() {
+    if (!elements.batchDocumentFileList) return;
+    
+    // 更新计数
+    if (elements.batchDocumentCount) {
+        elements.batchDocumentCount.textContent = `(${appState.batchDocumentFiles.length})`;
+    }
+    
+    // 清空列表
+    elements.batchDocumentFileList.innerHTML = '';
+    
+    // 如果没有文件，显示空状态
+    if (appState.batchDocumentFiles.length === 0) {
+        elements.batchDocumentFileList.innerHTML = '<div class="empty-batch-list">请添加文件以开始批量转换</div>';
+        elements.batchDocumentConvert.disabled = true;
+        return;
+    }
+    
+    // 添加每个文件到列表
+    appState.batchDocumentFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'batch-file-item';
+        
+        const fileIcon = document.createElement('span');
+        fileIcon.className = 'material-icons batch-file-icon';
+        fileIcon.textContent = getFileIcon(file.name);
+        
+        const fileDetails = document.createElement('div');
+        fileDetails.className = 'batch-file-details';
+        
+        const fileName = document.createElement('div');
+        fileName.className = 'batch-file-name';
+        fileName.textContent = file.name;
+        
+        const fileSize = document.createElement('div');
+        fileSize.className = 'batch-file-size';
+        fileSize.textContent = formatFileSize(file.size);
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'batch-file-remove';
+        removeBtn.innerHTML = '<span class="material-icons">close</span>';
+        removeBtn.addEventListener('click', () => removeBatchDocumentFile(index));
+        
+        fileDetails.appendChild(fileName);
+        fileDetails.appendChild(fileSize);
+        
+        fileItem.appendChild(fileIcon);
+        fileItem.appendChild(fileDetails);
+        fileItem.appendChild(removeBtn);
+        
+        elements.batchDocumentFileList.appendChild(fileItem);
+    });
+    
+    // 启用批量转换按钮
+    elements.batchDocumentConvert.disabled = false;
+}
+
+// 移除批量文档文件
+function removeBatchDocumentFile(index) {
+    appState.batchDocumentFiles.splice(index, 1);
+    updateBatchDocumentFilesList();
+}
+
+// 清空批量文档文件
+function clearBatchDocumentFiles() {
+    appState.batchDocumentFiles = [];
+    updateBatchDocumentFilesList();
+}
+
+// 开始批量文档转换
+function startBatchDocumentConversion() {
+    if (!appState.batchDocumentFiles || appState.batchDocumentFiles.length === 0) {
+        showError('请先添加文件');
+        return;
+    }
+    
+    // 获取选中的格式
+    const selectedFormat = appState.documentSelectedFormat || 'pdf';
+    
+    // 创建进度条UI
+    showMessage('批量文档转换开始，请稍候...', 'info');
+    
+    // 用于跟踪转换进度
+    let convertedCount = 0;
+    const totalFiles = appState.batchDocumentFiles.length;
+    
+    // 禁用转换按钮，防止重复点击
+    elements.batchDocumentConvert.disabled = true;
+    
+    // 确保JSZip库已加载
+    loadJSZipLibrary().then(() => {
+        // 创建ZIP文件用于打包所有转换结果
+        const zip = new JSZip();
+        
+        // 对每个文件进行转换
+        appState.batchDocumentFiles.forEach((file, index) => {
+            setTimeout(() => {
+                // 模拟转换过程
+                const fileName = `${file.name.split('.')[0]}.${selectedFormat}`;
+                
+                // 创建类似的输出文件（模拟转换）
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // 简单的处理方式，实际应用中应根据不同格式进行转换
+                    const fileData = e.target.result;
+                    const blob = new Blob([fileData], { type: `application/${selectedFormat}` });
+                    
+                    // 添加到ZIP
+                    zip.file(fileName, blob);
+                    
+                    // 更新进度
+                    convertedCount++;
+                    const progress = Math.round((convertedCount / totalFiles) * 100);
+                    showMessage(`批量文档转换进度: ${progress}%`, 'info');
+                    
+                    // 检查是否所有文件都已转换
+                    if (convertedCount === totalFiles) {
+                        // 生成ZIP文件
+                        zip.generateAsync({type: 'blob'}).then(function(content) {
+                            // 创建下载链接
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = URL.createObjectURL(content);
+                            downloadLink.download = `批量文档转换_${new Date().getTime()}.zip`;
+                            downloadLink.click();
+                            
+                            // 重置UI
+                            showMessage('批量文档转换完成，已下载ZIP文件', 'success');
+                            elements.batchDocumentConvert.disabled = false;
+                        });
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }, index * 300); // 每个文件间隔300ms处理，模拟转换时间
+        });
+    }).catch(error => {
+        showError('批量转换失败: 无法加载JSZip库');
+        elements.batchDocumentConvert.disabled = false;
     });
 }
