@@ -210,6 +210,7 @@ const appState = {
     batchCompressFiles: [],
     batchCompressInProgress: false,
     batchCompressCompleted: 0,
+    batchImageFiles: [],  // 存储批量图像文件
 };
 
 // 压缩级别映射
@@ -2566,6 +2567,40 @@ function bindFormatConversionEvents() {
     
     // 文档转换相关事件
     bindDocumentEvents();
+    
+    // 图像批量转换相关事件
+    if (elements.batchFileInput && elements.batchDropArea) {
+        // 批量上传按钮点击
+        const batchUploadBtn = elements.batchDropArea.querySelector('.batch-upload-btn');
+        if (batchUploadBtn) {
+            batchUploadBtn.addEventListener('click', function() {
+                elements.batchFileInput.click();
+            });
+        }
+        
+        // 批量文件选择事件
+        elements.batchFileInput.addEventListener('change', handleBatchFileSelect);
+        
+        // 批量拖放事件
+        elements.batchDropArea.addEventListener('dragover', handleBatchDragOver);
+        elements.batchDropArea.addEventListener('dragleave', handleBatchDragLeave);
+        elements.batchDropArea.addEventListener('drop', handleBatchFileDrop);
+    }
+    
+    // 批量转换控制
+    if (elements.addMoreFilesBtn) {
+        elements.addMoreFilesBtn.addEventListener('click', function() {
+            elements.batchFileInput.click();
+        });
+    }
+    
+    if (elements.clearBatchBtn) {
+        elements.clearBatchBtn.addEventListener('click', clearBatchFiles);
+    }
+    
+    if (elements.batchConvertBtn) {
+        elements.batchConvertBtn.addEventListener('click', startBatchConversion);
+    }
 }
 
 // 绑定PDF相关事件
@@ -4122,6 +4157,9 @@ function loadLibraries() {
     
     // 加载jsPDF库
     loadJsPdfLibrary();
+    
+    // 加载JSZip库
+    loadJSZipLibrary();
 }
 
 // 加载jsPDF库
@@ -4429,4 +4467,332 @@ function convertPdfToDocx(file, resultType, resultFilename) {
     };
     
     reader.readAsArrayBuffer(file);
+}
+
+// 图像批量转换处理
+let batchImageFiles = []; // 存储批量图像文件
+const MAX_BATCH_FILES = 50; // 最大批量处理文件数
+
+// 初始化主要DOM元素引用
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing code ...
+    
+    // 添加批量图像转换相关元素
+    elements.batchFileInput = document.getElementById('batch-file-input');
+    elements.batchDropArea = document.getElementById('batch-drop-area');
+    elements.batchFileList = document.getElementById('batch-file-list');
+    elements.batchCount = document.getElementById('batch-count');
+    elements.addMoreFiles = document.getElementById('add-more-files');
+    elements.clearBatch = document.getElementById('clear-batch');
+    elements.batchConvert = document.getElementById('batch-convert');
+    
+    // ... existing code ...
+});
+
+// 在bindFormatConversionEvents函数中添加批量处理相关事件
+function bindFormatConversionEvents() {
+    // ... existing code ...
+    
+    // 图像批量转换相关事件
+    if (elements.batchFileInput && elements.batchDropArea) {
+        // 批量上传按钮点击
+        const batchUploadBtn = elements.batchDropArea.querySelector('.batch-upload-btn');
+        if (batchUploadBtn) {
+            batchUploadBtn.addEventListener('click', function() {
+                elements.batchFileInput.click();
+            });
+        }
+        
+        // 批量文件选择事件
+        elements.batchFileInput.addEventListener('change', handleBatchFileSelect);
+        
+        // 批量拖放事件
+        elements.batchDropArea.addEventListener('dragover', handleBatchDragOver);
+        elements.batchDropArea.addEventListener('dragleave', handleBatchDragLeave);
+        elements.batchDropArea.addEventListener('drop', handleBatchFileDrop);
+    }
+    
+    // 批量转换控制
+    if (elements.addMoreFiles) {
+        elements.addMoreFiles.addEventListener('click', function() {
+            elements.batchFileInput.click();
+        });
+    }
+    
+    if (elements.clearBatch) {
+        elements.clearBatch.addEventListener('click', clearBatchFiles);
+    }
+    
+    if (elements.batchConvert) {
+        elements.batchConvert.addEventListener('click', startBatchConversion);
+    }
+    
+    // ... existing code ...
+}
+
+// 处理批量文件选择
+function handleBatchFileSelect(event) {
+    const files = event.target.files;
+    if (files.length > 0) {
+        addBatchFiles(files);
+    }
+}
+
+// 处理批量拖拽悬停
+function handleBatchDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.batchDropArea.classList.add('drag-over');
+}
+
+// 处理批量拖拽离开
+function handleBatchDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.batchDropArea.classList.remove('drag-over');
+}
+
+// 处理批量文件拖放
+function handleBatchFileDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    elements.batchDropArea.classList.remove('drag-over');
+    
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+        addBatchFiles(files);
+    }
+}
+
+// 添加批量文件
+function addBatchFiles(files) {
+    const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length === 0) {
+        showError('请上传有效的图像文件');
+        return;
+    }
+    
+    // 检查文件数量限制
+    if (appState.batchImageFiles.length + imageFiles.length > MAX_BATCH_FILES) {
+        showError(`最多只能添加${MAX_BATCH_FILES}个文件进行批量转换`);
+        // 只添加数量限制内的文件
+        const remainingSlots = MAX_BATCH_FILES - appState.batchImageFiles.length;
+        if (remainingSlots > 0) {
+            imageFiles.splice(remainingSlots);
+            appState.batchImageFiles = appState.batchImageFiles.concat(imageFiles);
+            updateBatchFilesList();
+        }
+        return;
+    }
+    
+    // 检查文件大小
+    const oversizedFiles = imageFiles.filter(file => file.size > 20 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+        showError('批量转换中，每个文件不能超过20MB');
+        // 过滤掉超大文件
+        const validFiles = imageFiles.filter(file => file.size <= 20 * 1024 * 1024);
+        appState.batchImageFiles = appState.batchImageFiles.concat(validFiles);
+    } else {
+        appState.batchImageFiles = appState.batchImageFiles.concat(imageFiles);
+    }
+    
+    updateBatchFilesList();
+}
+
+// 更新批量文件列表UI
+function updateBatchFilesList() {
+    if (!elements.batchFileList) return;
+    
+    // 更新计数
+    if (elements.batchCount) {
+        elements.batchCount.textContent = `(${appState.batchImageFiles.length})`;
+    }
+    
+    // 清空列表
+    elements.batchFileList.innerHTML = '';
+    
+    // 如果没有文件，显示空状态
+    if (appState.batchImageFiles.length === 0) {
+        elements.batchFileList.innerHTML = '<div class="empty-batch-list">请添加文件以开始批量转换</div>';
+        elements.batchConvert.disabled = true;
+        return;
+    }
+    
+    // 添加每个文件到列表
+    appState.batchImageFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'batch-file-item';
+        
+        const fileIcon = document.createElement('span');
+        fileIcon.className = 'material-icons batch-file-icon';
+        fileIcon.textContent = getFileIcon(file.name);
+        
+        const fileDetails = document.createElement('div');
+        fileDetails.className = 'batch-file-details';
+        
+        const fileName = document.createElement('div');
+        fileName.className = 'batch-file-name';
+        fileName.textContent = file.name;
+        
+        const fileSize = document.createElement('div');
+        fileSize.className = 'batch-file-size';
+        fileSize.textContent = formatFileSize(file.size);
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'batch-file-remove';
+        removeBtn.innerHTML = '<span class="material-icons">close</span>';
+        removeBtn.addEventListener('click', () => removeBatchFile(index));
+        
+        fileDetails.appendChild(fileName);
+        fileDetails.appendChild(fileSize);
+        
+        fileItem.appendChild(fileIcon);
+        fileItem.appendChild(fileDetails);
+        fileItem.appendChild(removeBtn);
+        
+        elements.batchFileList.appendChild(fileItem);
+    });
+    
+    // 启用批量转换按钮
+    elements.batchConvert.disabled = false;
+}
+
+// 移除批量文件
+function removeBatchFile(index) {
+    appState.batchImageFiles.splice(index, 1);
+    updateBatchFilesList();
+}
+
+// 清空批量文件
+function clearBatchFiles() {
+    appState.batchImageFiles = [];
+    updateBatchFilesList();
+}
+
+// 开始批量转换
+function startBatchConversion() {
+    if (appState.batchImageFiles.length === 0) {
+        showError('请先添加图像文件');
+        return;
+    }
+    
+    // 获取选中的格式
+    const selectedFormat = appState.selectedFormat || 'png';
+    const quality = parseInt(elements.qualitySlider.value);
+    
+    // 创建进度条UI
+    showMessage('批量转换开始，请稍候...', 'info');
+    
+    // 用于跟踪转换进度
+    let convertedCount = 0;
+    const totalFiles = appState.batchImageFiles.length;
+    
+    // 禁用转换按钮，防止重复点击
+    elements.batchConvert.disabled = true;
+    
+    // 确保JSZip库已加载
+    loadJSZipLibrary().then(() => {
+        // 创建ZIP文件用于打包所有转换结果
+        const zip = new JSZip();
+        
+        // 对每个文件进行转换
+        appState.batchImageFiles.forEach((file, index) => {
+            // 读取文件
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // 转换图像
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // 获取转换后的格式
+                    let mimeType = 'image/png';
+                    switch(selectedFormat) {
+                        case 'jpg':
+                            mimeType = 'image/jpeg';
+                            break;
+                        case 'webp':
+                            mimeType = 'image/webp';
+                            break;
+                        case 'gif':
+                            mimeType = 'image/gif';
+                            break;
+                        // 其他格式...
+                    }
+                    
+                    // 导出为BLOB
+                    canvas.toBlob(function(blob) {
+                        // 添加到ZIP
+                        const fileName = `${file.name.split('.')[0]}.${selectedFormat}`;
+                        zip.file(fileName, blob);
+                        
+                        // 更新进度
+                        convertedCount++;
+                        const progress = Math.round((convertedCount / totalFiles) * 100);
+                        showMessage(`批量转换进度: ${progress}%`, 'info');
+                        
+                        // 检查是否所有文件都已转换
+                        if (convertedCount === totalFiles) {
+                            // 生成ZIP文件
+                            zip.generateAsync({type: 'blob'}).then(function(content) {
+                                // 创建下载链接
+                                const downloadLink = document.createElement('a');
+                                downloadLink.href = URL.createObjectURL(content);
+                                downloadLink.download = `批量转换_${new Date().getTime()}.zip`;
+                                downloadLink.click();
+                                
+                                // 重置UI
+                                showMessage('批量转换完成，已下载ZIP文件', 'success');
+                                elements.batchConvert.disabled = false;
+                            });
+                        }
+                    }, mimeType, quality/100);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }).catch(error => {
+        showError('批量转换失败: 无法加载JSZip库');
+        elements.batchConvert.disabled = false;
+    });
+}
+
+// 加载JSZip库
+function loadJSZipLibrary() {
+    if (window.JSZip) {
+        console.log('JSZip库已加载');
+        return Promise.resolve();
+    }
+    
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        script.onload = () => {
+            console.log('JSZip库加载成功');
+            resolve();
+        };
+        script.onerror = () => {
+            console.error('JSZip库加载失败，尝试备用源');
+            // 尝试备用源
+            const backupScript = document.createElement('script');
+            backupScript.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+            backupScript.onload = () => {
+                console.log('JSZip库从备用源加载成功');
+                resolve();
+            };
+            backupScript.onerror = () => {
+                const error = new Error('无法加载JSZip库');
+                console.error(error);
+                reject(error);
+            };
+            document.head.appendChild(backupScript);
+        };
+        document.head.appendChild(script);
+    });
 }
